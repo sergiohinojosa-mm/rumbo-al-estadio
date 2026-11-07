@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Grabadora de Papá · Rumbo al Estadio</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@400;700;800&display=swap">
+<style>
+  :root { --bg: #fbf7ff; --ink: #241a33; --muted: #615776; --card: #fff; --line: #e6ddf2; --pop: #c2185b; --sky: #2f5fc4;
+    --good: #17794a; --rec: #b3123a; --sun: #ffc23d; --on: #fff; --chip: #f3ecfb; color-scheme: light;
+    --display: "Bagel Fat One", "Arial Rounded MT Bold", system-ui, sans-serif; --body: "Nunito", -apple-system, system-ui, sans-serif; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #140f1c; --ink: #f3eefa; --muted: #b2a8c4; --card: #1f1830; --line: #352b47;
+    --pop: #ff5fa8; --sky: #86a9ff; --good: #4fd18f; --rec: #ff7a8a; --on: #140f1c; --chip: #2a2140; color-scheme: dark; } }
+  :root[data-theme="dark"] { --bg: #140f1c; --ink: #f3eefa; --muted: #b2a8c4; --card: #1f1830; --line: #352b47;
+    --pop: #ff5fa8; --sky: #86a9ff; --good: #4fd18f; --rec: #ff7a8a; --on: #140f1c; --chip: #2a2140; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.5 var(--body); overflow-x: hidden; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right)) 64px max(16px, env(safe-area-inset-left)); }
+  h1 { margin: 0 0 4px; font: 400 30px/1.1 var(--display); color: var(--pop); }
+  h2 { font: 400 20px/1.2 var(--display); margin: 28px 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+  .who { display: inline-block; font-size: 14px; font-weight: 800; padding: 2px 10px; border-radius: 99px; background: var(--chip); color: var(--ink); }
+  .who.re { background: color-mix(in srgb, var(--sun) 25%, var(--card)); }
+  .num { color: var(--muted); font-size: 14px; margin-left: 8px; }
+  .phrase { font: 400 28px/1.2 var(--display); margin: 14px 0 8px; overflow-wrap: anywhere; }
+  .meaning, .when { color: var(--muted); margin: 0 0 8px; }
+  .when { font-size: 15px; margin-bottom: 18px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  button { font: inherit; font-weight: 800; border: 0; border-radius: 14px; padding: 12px 18px; cursor: pointer; color: var(--on); background: var(--pop); min-height: 56px; }
+  button.secondary { background: transparent; color: var(--ink); border: 2px solid var(--line); }
+  button.rec { background: var(--rec); }
+  button.save { background: var(--good); }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+  .status { margin-top: 14px; color: var(--muted); min-height: 1.5em; }
+  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 20px 0 8px; }
+  .bar div { height: 100%; background: var(--good); width: 0; }
+  .tip { background: var(--card); border: 1.5px dashed var(--line); border-radius: 14px; padding: 12px 14px; color: var(--ink); font-size: 16px; margin-bottom: 14px; }
+  .tip.warn { border-color: var(--rec); }
+  .note { background: color-mix(in srgb, var(--sun) 16%, var(--card)); border: 1.5px solid var(--sun); border-radius: 14px; padding: 10px 14px; font-size: 16px; margin: 0 0 14px; }
+  ol { padding-left: 24px; margin: 0; }
+  li { padding: 12px 0; min-height: 48px; cursor: pointer; }
+  li.done { color: var(--muted); text-decoration: line-through; }
+  li.cur { font-weight: 800; }
+  code { font-size: .9em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎙️ Grabadora de Papá</h1>
+  <p class="sub">Papá: cada frase es una lección que Mariel escucha en Rumbo al Estadio justo después de vivirla con su banda. Grábala con tu voz, escúchala y, si te gusta, guárdala. Se descarga un archivo con el nombre de la lección.</p>
+  <div class="tip">💡 Dura de 20 a 40 segundos. Di la frase, cuéntale una historia corta y real (de música, de la escuela, de la familia o de tu trabajo, pero sin hoteles) y termina repitiendo la frase.</div>
+  <div class="tip">💻 Mejor en la laptop con <b>Safari</b> y en un cuarto callado. Cada audio queda en <b>Descargas</b> con el nombre de su lección (por ejemplo <code>cumple.m4a</code>). No les cambies el nombre: Claude los toma de ahí.</div>
+  <div id="wrong" class="tip warn" hidden>⚠️ Este navegador graba en un formato que el iPhone no reproduce. Abre esta página en <b>Safari</b>.</div>
+
+  <div class="card" aria-live="polite">
+    <span id="who" class="who"></span><span id="num" class="num"></span>
+    <div id="phrase" class="phrase"></div>
+    <p id="meaning" class="meaning"></p>
+    <p id="when" class="when"></p>
+    <div class="row">
+      <button id="rec" class="rec" type="button">⏺ Grabar</button>
+      <button id="play" class="secondary" type="button" disabled>▶ Escuchar</button>
+      <button id="save" class="save" type="button" disabled>💾 Guardar y siguiente</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="prev" class="secondary" type="button">← Anterior</button>
+      <button id="skip" class="secondary" type="button">Saltar →</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="bar"><div id="bar"></div></div>
+  <div id="count" class="sub"></div>
+
+  <h2>🆕 Frases nuevas (todavía sin audio)</h2>
+  <ol id="listNew"></ol>
+
+  <h2>🔁 Por regrabar (hablan de hoteles)</h2>
+  <p class="note">Estas frases ya tienen audio, pero el audio habla de hoteles, huéspedes o del Consejo. <b>Hoy no se usan en el juego.</b> Si quieres que entren, regrábalas contando una historia sin hoteles y avisa a Claude.</p>
+  <ol id="listRe"></ol>
+</main>
+
+<script type="module">
+// Las frases nuevas de Papá vienen de js/data/lessons.js (by === 'papa' y audio === false).
+// Si el catálogo todavía no existe, se usan las 3 aprobadas (REQUISITOS_SERGIO.md, punto 15).
+const NEW_FALLBACK = [
+  { id: 'un_no', by: 'papa', phrase: 'Un no hoy no es un no para siempre', meaning: 'Un rechazo es parte del camino: se intenta otra vez, mejor preparada.' },
+  { id: 'cumple', by: 'papa', phrase: 'Cumple lo que prometes', meaning: 'Si cumples, la gente vuelve a confiar en ti y quiere trabajar contigo otra vez.' },
+  { id: 'cuida_fans', by: 'papa', phrase: 'Cuida a tus fans y ellos te cuidarán', meaning: 'Los fans que se sienten queridos regresan y traen a sus amigos.' },
+];
+// Aprobadas, pero su audio actual habla de hoteles (REQUISITOS_SERGIO.md, punto 15). Hoy no se usan.
+const REDO = [
+  { id: 'equipo', phrase: "It's all about the team", es: 'Todo depende del equipo' },
+  { id: 'ejecucion', phrase: 'Execution eats strategy for breakfast', es: 'Hacer bien las cosas le gana a tener un buen plan' },
+  { id: 'malas_noticias', phrase: 'Las malas noticias, rápido y con un plan' },
+  { id: 'rodeate', phrase: 'Rodéate de gente mejor que tú' },
+  { id: 'marca', phrase: 'Tu marca es lo que dicen de ti cuando no estás' },
+  { id: 'seguridad', phrase: 'La seguridad no se negocia' },
+  { id: 'convencer', phrase: 'Para convencer, lleva números, no solo ganas' },
+  { id: 'demanda_precio', phrase: 'Cuando todos quieren, el precio sube' },
+  { id: 'location', phrase: 'Location, location, location', es: 'Ubicación, ubicación, ubicación' },
+  { id: 'reglas_precio', phrase: 'Decide las reglas en calma, no con prisa' },
+  { id: 'empodera', phrase: 'Quien atiende al cliente debe poder resolver' },
+  { id: 'cuarto_vacio', phrase: 'Un cuarto vacío esta noche se pierde para siempre' },
+  { id: 'valor_hotel', phrase: 'Un negocio vale por lo que va a ganar, no por lo que costó' },
+  { id: 'mismo_barco', phrase: 'Dueño y directora reman en el mismo barco' },
+].map((x) => ({ ...x, by: 'papa', redo: true, meaning: `${x.es ? `(${x.es}) ` : ''}Grábala con una historia de música, escuela o familia, sin hoteles.` }));
+
+let fresh = NEW_FALLBACK;
+try {
+  const m = await import('./js/data/lessons.js');
+  const list = (m.LESSONS || m.default || []).filter((l) => l.by === 'papa' && l.audio === false);
+  if (list.length) fresh = list;
+} catch { /* catálogo todavía no escrito */ }
+
+const F = [...fresh.map((x) => ({ ...x, redo: false })), ...REDO];
+const KEY = 'grabadora.rumbo.hechas';
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+const saveDone = () => { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch {} };
+
+let i = Math.max(0, F.findIndex((f) => !done[f.id]));
+let recorder = null, chunks = [], blob = null, stream = null, url = null;
+const $ = (id) => document.getElementById(id);
+// Safari graba en .m4a (se oye en todos lados); Chrome en .webm.
+const MIME = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+const EXT = MIME.includes('mp4') ? 'm4a' : 'webm';
+if (EXT === 'webm') $('wrong').hidden = false;
+
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const item = (x) => `<li data-k="${F.indexOf(x)}" class="${done[x.id] ? 'done' : ''} ${F[i] === x ? 'cur' : ''}">“${esc(x.phrase)}” <small>(${esc(x.id)})</small></li>`;
+
+function show() {
+  const f = F[i];
+  const n = F.filter((x) => done[x.id]).length;
+  $('bar').style.width = (100 * n) / F.length + '%';
+  $('count').textContent = `${n} de ${F.length} grabadas`;
+  $('listNew').innerHTML = F.filter((x) => !x.redo).map(item).join('');
+  $('listRe').innerHTML = F.filter((x) => x.redo).map(item).join('');
+  blob = null;
+  $('play').disabled = $('save').disabled = true;
+  $('rec').textContent = '⏺ Grabar';
+  if (!f) {
+    $('who').textContent = '¡Listo!'; $('who').className = 'who'; $('num').textContent = '';
+    $('phrase').textContent = '¡Terminaste todas! Gracias. Avísale a Claude: los audios están en tu carpeta Descargas. 💛';
+    $('meaning').textContent = ''; $('when').textContent = ''; $('rec').disabled = true;
+    return;
+  }
+  $('who').textContent = f.redo ? '🔁 Por regrabar · hoy no se usa en el juego' : '🆕 Frase nueva de Papá';
+  $('who').className = f.redo ? 'who re' : 'who';
+  $('num').textContent = `${i + 1} de ${F.length} · archivo ${f.id}.${EXT}`;
+  $('phrase').textContent = `“${f.phrase}”`;
+  $('meaning').textContent = f.meaning || '';
+  $('when').textContent = f.when ? `Suena en el juego: ${f.when}` : '';
+  $('status').textContent = '';
+  $('rec').disabled = false;
+}
+
+$('rec').onclick = async () => {
+  if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    $('status').textContent = 'Esta página no puede usar el micrófono aquí. Ábrela desde la dirección https del juego (GitHub).';
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    chunks = [];
+    recorder = new MediaRecorder(stream, MIME ? { mimeType: MIME } : undefined);
+  } catch { $('status').textContent = 'No se pudo usar el micrófono. Revisa el permiso del navegador.'; return; }
+  recorder.ondataavailable = (e) => chunks.push(e.data);
+  recorder.onstop = () => {
+    stream.getTracks().forEach((t) => t.stop());
+    blob = new Blob(chunks, { type: recorder.mimeType });
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(blob);
+    $('rec').textContent = '⏺ Grabar otra vez';
+    $('play').disabled = $('save').disabled = false;
+    $('status').textContent = 'Escúchala. Si te gusta, guárdala.';
+  };
+  recorder.start();
+  $('rec').textContent = '⏹ Parar';
+  $('status').textContent = 'Grabando… di la frase y tu historia, luego toca Parar.';
+};
+$('play').onclick = () => { if (url) new Audio(url).play(); };
+$('save').onclick = () => {
+  const f = F[i];
+  if (!blob || !f) return;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${f.id}.${EXT}`;
+  a.click();
+  done[f.id] = true; saveDone();
+  i++;
+  show();
+};
+$('skip').onclick = () => { i = Math.min(F.length, i + 1); show(); };
+$('prev').onclick = () => { i = Math.max(0, i - 1); show(); };
+const pick = (e) => { const li = e.target.closest('li'); if (li) { i = +li.dataset.k; show(); scrollTo(0, 0); } };
+$('listNew').onclick = pick;
+$('listRe').onclick = pick;
+show();
+</script>
+</body>
+</html>

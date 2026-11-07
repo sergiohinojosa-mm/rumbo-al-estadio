@@ -1,0 +1,27 @@
+/* Editor de look (art.js → lookEditor). Usa los tokens del juego con valores de respaldo. */
+.art-ed{display:grid;gap:12px;grid-template-columns:1fr;max-width:640px;color:var(--ink,#241a33)}
+@media (min-width:640px){.art-ed{grid-template-columns:200px 1fr;align-items:start}}
+.art-ed__preview{display:grid;place-items:center;min-height:180px;border-radius:22px;padding:10px;
+  background:radial-gradient(circle at 50% 38%,#fff3f9 0,#ffd9ec 45%,#e6dbff 100%);box-shadow:inset 0 0 0 2px rgba(46,34,64,.08)}
+.art-ed__preview svg{width:min(150px,42vw);height:auto}
+@media (min-width:640px){.art-ed__preview svg{width:168px}}
+.art-ed__side{display:grid;gap:10px;min-width:0}
+.art-ed__tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.art-ed button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.art-ed__tab{flex:0 0 auto;min-height:44px;min-width:44px;padding:0 12px;border-radius:999px;font-weight:700;font-size:14px;
+  border:2px solid var(--line,#e6ddf2);background:var(--paper,#fff)}
+.art-ed__tab[aria-selected=true]{background:var(--pop,#e0338a);border-color:var(--pop,#e0338a);color:var(--on-accent,#fff)}
+.art-ed__dice{font-size:20px;padding:0 10px}
+.art-ed__group{border:0;margin:0;padding:0;display:grid;gap:6px}
+.art-ed__group legend{font-size:13px;font-weight:700;color:var(--muted,#6d6380);padding:0 0 4px}
+.art-ed__opts{display:flex;flex-wrap:wrap;gap:8px}
+.art-ed__opt{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-width:56px;min-height:56px;padding:6px 4px 4px;
+  border-radius:16px;border:2px solid var(--line,#e6ddf2);background:var(--paper,#fff);transition:transform .12s}
+.art-ed__opt:active{transform:scale(.96)}
+.art-ed__opt.is-on{border-color:var(--pop,#e0338a);box-shadow:0 0 0 3px rgba(224,51,138,.22)}
+.art-ed__opt:disabled{cursor:default;opacity:.5}
+.art-ed__sw{width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(46,34,64,.85)}
+.art-ed__face{display:block;line-height:0}
+.art-ed__lbl{font-size:11px;line-height:1.1;max-width:64px;text-align:center}
+.art-ed__lock{position:absolute;top:-6px;right:-6px;font-size:14px;background:var(--paper,#fff);border-radius:50%;padding:1px}
+@media (prefers-reduced-motion:reduce){.art-ed__opt{transition:none}}

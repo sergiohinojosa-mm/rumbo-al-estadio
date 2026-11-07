@@ -1,0 +1,122 @@
+/* Show screens: prep (lugar, cobro, setlist), live (escena + ritmo) and close (foto, ✅⚠️🌤️, frascos).
+   Uses the tokens of styles.css. Phone: one column, scene on top. Mac (≥ 900 px): scene left, controls right. */
+
+.sh-page { max-width: 1100px; }
+.sh-cols { display: grid; gap: 14px; min-width: 0; }
+.sh-cols > * { min-width: 0; }
+.sh-left, .sh-right { min-width: 0; }
+@media (min-width: 900px) {
+  .sh-cols { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); align-items: start; }
+  .sh-left { position: sticky; top: 12px; }
+}
+
+/* Scene */
+.sh-scene { border-radius: 18px; overflow: hidden; background: var(--chip); line-height: 0; min-width: 0; }
+.sh-scene svg { width: 100%; height: auto; display: block; }
+.sh-fallback { line-height: 1.3; display: grid; place-items: center; gap: 6px; padding: 18px 10px; min-height: 160px; font-size: 18px; text-align: center; overflow-wrap: anywhere; }
+.sh-fb-ic { font-size: 44px; }
+.sh-stage { position: relative; display: grid; gap: 6px; min-width: 0; }
+.sh-stage-head { display: flex; justify-content: space-between; gap: 8px; font-weight: 800; flex-wrap: wrap; }
+.sh-lyric {
+  position: absolute; left: 10px; right: 10px; top: 38px; text-align: center; font-weight: 800; font-size: 15px;
+  color: #fff; background: rgba(20, 15, 28, .62); border-radius: 12px; padding: 6px 10px; overflow-wrap: anywhere;
+}
+
+/* Prep: venue list, queue, money */
+.sh-venue .sh-v { display: grid; gap: 1px; min-width: 0; }
+.sh-venue .sh-v small { font-weight: 600; color: var(--muted); font-size: 13.5px; line-height: 1.3; }
+.sh-venue.off .sh-v small { color: var(--ink); }
+.sh-queue { display: flex; flex-wrap: wrap; align-items: center; gap: 0; font-size: 18px; line-height: 1.25; min-height: 28px; word-break: break-all; }
+.sh-q-off { color: var(--muted); letter-spacing: 2px; }
+.sh-count { font-weight: 800; }
+.sh-price, .sh-live { display: grid; gap: 8px; }
+.sh-money { gap: 4px; }
+.sh-money .ln { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sh-money .ln b { white-space: nowrap; }
+.sh-net { border-top: 1px dashed var(--line); padding-top: 4px; font-weight: 800; }
+.sh-net.neg b { color: var(--warn); }
+.sh-set .chips .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 48px; }
+.sh-right .btn.ghost { min-height: 48px; }
+
+/* Live: encore and free solo */
+.sh-encore { gap: 10px; }
+.sh-encore h3 { font-size: 26px; color: var(--pop); }
+.sh-solo { gap: 10px; }
+.sh-solo-bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; }
+.sh-solo-bar > i { display: block; height: 100%; width: 0; background: var(--pop); }
+.sh-pads { display: grid; grid-template-columns: repeat(5, minmax(48px, 1fr)); gap: 6px; }
+@media (max-width: 340px) { .sh-pads { gap: 4px; } }
+.sh-pad {
+  min-height: 120px; border-radius: 16px; border: 2px solid var(--line); font-size: 26px; cursor: pointer;
+  background: color-mix(in srgb, var(--pc) 22%, var(--paper)); color: var(--ink); touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.sh-pad.p0 { --pc: var(--pop); } .sh-pad.p1 { --pc: var(--sky); } .sh-pad.p2 { --pc: var(--sun); } .sh-pad.p3 { --pc: var(--good); } .sh-pad.p4 { --pc: var(--calm); }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-pad.hit { animation: sh-hit .25s ease-out; }
+  .sh-coin { transition: transform .12s ease-out; }
+}
+@keyframes sh-hit { from { transform: scale(.92); background: var(--pc); } }
+
+/* Close: photo, numbers, chains */
+.sh-photo { margin: 0; background: #fffdf6; border-radius: 6px; padding: 10px 10px 8px; box-shadow: var(--shadow); transform: rotate(-1.2deg); display: grid; gap: 6px; color: #241a33; }
+.sh-photo .sh-scene { border-radius: 4px; }
+.sh-photo figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-weight: 800; font-size: 14px; }
+.sh-plus { color: #8a1347; }
+@media (max-width: 899px) { .sh-close.sh-after-photo .sh-left { display: none; } }
+.sh-big { display: grid; gap: 4px; font-size: 20px; font-weight: 800; }
+.sh-comment { color: var(--muted); font-weight: 700; font-style: italic; }
+.sh-chain { display: flex; gap: 8px; align-items: flex-start; }
+.sh-m { flex: none; min-width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; background: var(--paper); font-size: 15px; }
+.sh-motiv { font-weight: 700; font-size: 17px; }
+.sh-motiv b { color: var(--sky); display: block; }
+.motiv-line { display: grid; gap: 8px; font-size: 16px; }
+.sh-teaser { font-weight: 700; font-size: 17px; }
+.sh-sum { font-weight: 700; }
+
+/* Coins and jars */
+.sh-tray { display: flex; flex-wrap: wrap; gap: 4px; min-height: 52px; align-items: center; justify-content: center; padding: 4px; border-radius: 14px; border: 1.5px dashed var(--line); }
+.sh-coin { width: 48px; height: 48px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--sun) 30%, var(--paper)); font-size: 26px; cursor: grab; touch-action: none; padding: 0; }
+.sh-coin.lift { opacity: .35; }
+.sh-ghost { position: fixed; z-index: 80; pointer-events: none; font-size: 36px; transform: translate(-50%, -50%); }
+.sh-jars .pig { padding: 6px 2px; }
+.sh-jars .pig.sel { border: 2px solid var(--pop); background: color-mix(in srgb, var(--pop) 8%, var(--paper)); }
+.sh-jars .pig.sh-goal { border-color: var(--sun); }
+.sh-jar-btn {
+  border: 0; background: transparent; color: var(--ink); display: grid; gap: 3px; justify-items: center; cursor: pointer;
+  min-height: 48px; width: 100%; padding: 2px; font: inherit;
+}
+.sh-jar-btn:disabled { cursor: default; }
+.sh-jar-btn small { font-size: 12.5px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+.sh-jars .jar { width: 38px; height: 46px; }
+.sh-jars .pm button:disabled { opacity: .4; }
+/* Phone: the game's chorus box already shows the lyric right under the stage; don't repeat it on the stage. */
+@media (max-width: 899px) { .sh-live-page .sh-lyric { display: none; } }
+
+/* Rehearsal extras (ui/rehearse.js): song chips and 🐢 before playing, shapes on pads and notes,
+   first-run cues, the intro hint, the record badge and the Otra vez / Seguir buttons. */
+.rg-over { grid-template-columns: minmax(0, 1fr); }
+.rg-songs { display: flex; gap: 6px; max-width: 100%; overflow-x: auto; padding: 2px; justify-self: stretch; justify-content: safe center; scrollbar-width: none; }
+.rg-songs::-webkit-scrollbar { display: none; }
+.rg-songs .chip { flex: none; max-width: 70%; }
+.rg-songs .chip span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rg-slow[hidden] { display: none; }
+.rg-pad { gap: 0; align-content: center; }
+.rg-pad .rg-shape { font-style: normal; font-size: 22px; line-height: 1; }
+.rg-pad b { font-size: 12px; line-height: 1; }
+.rg-note { display: grid; place-items: center; font-size: 15px; line-height: 1; color: rgba(27, 18, 41, 0.72); }
+.rg-intro { position: absolute; left: 8px; right: 8px; top: 28%; z-index: 1; text-align: center; font-weight: 800; font-size: 18px; color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); pointer-events: none; }
+.rg-intro[hidden], .rg-cue-txt[hidden] { display: none; }
+.rg-cue-txt { position: absolute; left: 0; right: 0; bottom: 124px; text-align: center; font-weight: 800; font-size: 17px; color: var(--sun);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); pointer-events: none; white-space: nowrap; }
+.rg-pad.rg-cue { box-shadow: 0 0 16px 4px var(--lane); background: color-mix(in srgb, var(--lane) 45%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .rg:not(.rg-calm) .rg-pad.rg-cue { animation: rg-cue 0.45s ease-in-out infinite alternate; }
+}
+@keyframes rg-cue { from { box-shadow: 0 0 4px 0 var(--lane); } to { box-shadow: 0 0 20px 6px var(--lane); } }
+.rg-record { font-size: 18px; color: var(--sun); }
+.sh-record { font-weight: 800; color: var(--pop); }
+.rg-session { gap: 10px; }
+.rg-after { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rg-after .btn { margin: 0; min-width: 0; padding-inline: 8px; }
+.rg-after .btn[hidden] { display: none; }

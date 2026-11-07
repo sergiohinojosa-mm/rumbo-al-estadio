@@ -1,0 +1,66 @@
+/* 📸 Álbum de fotos (album.js), la foto del cierre (close.js) y sus polaroids (photo.js).
+   The polaroid is a picture (an <img> of an SVG): it stays cream-white in dark mode, like a real photo on a table.
+   Uses the tokens of styles.css only. */
+
+.al-img { width: 100%; height: auto; display: block; }
+
+/* ---------- Álbum ---------- */
+.al-album { display: grid; gap: 12px; min-width: 0; text-align: left; }
+.al-grid-wrap, .al-big { display: grid; gap: 14px; min-width: 0; }
+.al-grid-wrap[hidden], .al-big[hidden] { display: none; }
+.al-head { display: grid; gap: 2px; text-align: center; }
+.al-head h3 { font-size: 23px; }
+.al-sec { display: grid; gap: 8px; min-width: 0; }
+.al-sec h4 { font-size: 16px; font-weight: 800; margin: 0; border-bottom: 2px dashed var(--line); padding-bottom: 4px; }
+.al-sec h4 small { font-weight: 700; }
+/* Two columns on a phone (even at 320 px), three or four on the Mac. */
+.al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 14px 10px; min-width: 0; padding: 4px 2px; }
+@media (max-width: 359px) { .al-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 8px; } }
+.al-tile {
+  display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: none; cursor: pointer;
+  border-radius: 4px; filter: drop-shadow(0 3px 6px rgba(36, 26, 51, .22)); transform: rotate(-1.4deg);
+  transition: transform .15s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.al-grid .al-tile:nth-child(3n + 2) { transform: rotate(1.2deg); }
+.al-grid .al-tile:nth-child(3n) { transform: rotate(-.4deg); }
+.al-tile:hover, .al-tile:focus-visible { transform: rotate(0) scale(1.03); }
+.al-tile:focus-visible { outline: 3px solid var(--pop); outline-offset: 3px; }
+/* Placeholder while the photo is drawn: a blank polaroid with the place's icon (same 400×340 shape). */
+.al-ph {
+  display: grid; place-items: center; aspect-ratio: 400 / 340; width: 100%; border-radius: 4px;
+  background: linear-gradient(#fffdf6 0 6%, #e9e2f3 6% 71%, #fffdf6 71%); font-size: 28px; line-height: 1;
+}
+.al-ph.on { display: block; background: none; }
+
+.al-empty { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 6px 0; }
+.al-empty-pic {
+  width: 150px; aspect-ratio: 400 / 340; display: grid; place-items: center; font-size: 40px; border-radius: 6px;
+  border: 3px dashed var(--line); background: var(--chip); transform: rotate(-2deg);
+}
+
+/* ---------- Foto en grande ---------- */
+.al-big h3 { font-size: 22px; text-align: center; }
+.al-big-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.al-back { min-height: 44px; padding: 6px 14px; }
+.al-big-pic { margin: 0 auto; width: 100%; max-width: 560px; filter: drop-shadow(0 6px 14px rgba(36, 26, 51, .28)); transform: rotate(-.8deg); }
+.al-note {
+  margin: 0; display: grid; gap: 4px; font-size: 17px; line-height: 1.35; color: var(--ink);
+  background: var(--chip); border-radius: 12px; padding: 10px 12px; overflow-wrap: anywhere;
+}
+.al-sign { justify-self: end; font-weight: 800; color: var(--muted); font-size: 14px; }
+.al-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.al-nav .btn { min-width: 0; padding-inline: 8px; }
+
+/* ---------- Cierre: "📸 {hermana} tomó una foto" ---------- */
+.al-took { grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 12px; }
+.al-took-pic {
+  display: block; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px; min-width: 0;
+  filter: drop-shadow(0 3px 6px rgba(36, 26, 51, .25)); transform: rotate(-3deg); touch-action: manipulation;
+}
+.al-took-pic:focus-visible { outline: 3px solid var(--pop); outline-offset: 3px; }
+.al-took-txt { display: grid; gap: 4px; min-width: 0; }
+.al-took-txt b { font-size: 16px; }
+.al-took-txt .btn { min-height: 44px; padding: 6px 12px; justify-self: start; }
+@media (max-width: 359px) { .al-took { grid-template-columns: 76px minmax(0, 1fr); gap: 10px; } }
+
+@media (prefers-reduced-motion: reduce) { .al-tile { transition: none; } }

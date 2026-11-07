@@ -1,0 +1,130 @@
+/* Pantallas: título, portada, escenas, prólogo, plan, carta, hito, descanso, final, mapa y libreta.
+   Solo usa los tokens de styles.css (claro y oscuro). Una columna en el teléfono, dos desde 900 px. */
+
+/* ---------- Arte en contenedor ---------- */
+.art-box { min-width: 0; line-height: 0; }
+.art-box svg { width: 100%; height: auto; display: block; }
+.stage-art svg { border-radius: 18px; }
+.art-fallback {
+  display: grid; place-items: center; min-height: 140px; border-radius: 18px; line-height: 1;
+  font-size: 56px; background: var(--chip); border: 1px solid var(--line);
+}
+.home-stage { display: flex; justify-content: center; align-items: flex-end; gap: 8px; padding: 10px 12px 0; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sun) 18%, var(--paper)), color-mix(in srgb, var(--pop) 10%, var(--paper))); }
+.home-stage .home-me { width: 110px; line-height: 0; }
+.home-stage .home-me svg { width: 100%; height: auto; }
+.home-stage .home-ic { font-size: 54px; align-self: center; }
+.big-ic { font-size: 46px; line-height: 1; }
+.lead { font-size: 18px; font-weight: 700; }
+.big-num { font-family: var(--display); font-weight: 400; font-size: 34px; color: var(--pop); line-height: 1.1; }
+
+/* ---------- Título y avisos ---------- */
+.title-page { max-width: 720px; min-height: 100dvh; align-content: center; gap: 18px; }
+.title-logo { font-size: clamp(38px, 11vw, 64px); color: var(--ink); text-align: center; }
+.title-logo span { color: var(--pop); }
+.title-stage { max-width: 520px; width: 100%; justify-self: center; }
+.notice-page { max-width: 520px; min-height: 80dvh; align-content: center; }
+.notice-page .card { justify-items: center; gap: 12px; }
+
+/* ---------- Portada ---------- */
+.home-top { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.home-top .face { width: 56px; height: 56px; }
+.home-top h2 { font-size: 24px; }
+.home-art { justify-self: center; width: 100%; max-width: 132px; }
+.poster-art svg { border-radius: 10px; box-shadow: var(--shadow); }
+.phrase-ic { width: 48px; height: 48px; flex: none; display: grid; place-items: center; font-size: 26px; border-radius: 50%; background: var(--paper); }
+.shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ch.short { min-height: 60px; font-size: 12px; padding: 4px 2px; gap: 1px; }
+.ch.short .ic { font-size: 20px; }
+.song-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); min-width: 0; }
+.song-row:last-child { border-bottom: 0; }
+@media (min-width: 900px) {
+  .home .cols { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .home-art { max-width: 340px; }
+}
+
+/* ---------- Escenas ---------- */
+.scene-art { min-width: 0; }
+.beats { display: grid; gap: 10px; min-width: 0; }
+.beat { display: grid; gap: 8px; min-width: 0; }
+.beat.old { opacity: .55; }
+.beat.old .say-text, .beat.old .narr { font-weight: 600; }
+.narr {
+  border-radius: 12px; padding: 10px 12px; background: var(--chip); color: var(--ink);
+  font-style: italic; font-weight: 600; overflow-wrap: anywhere;
+}
+.dots { display: flex; gap: 5px; flex-wrap: wrap; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--pop); }
+.scene-page .btn.big { margin-top: 2px; }
+
+/* Tarjetas de datos de la historia (Así empezó / Así va, la libreta de Papá) */
+.tcard { gap: 6px; font-variant-numeric: tabular-nums; }
+.tc-head, .tc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: start; }
+.tc-head { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.tc-row { padding: 4px 0; border-top: 1px dashed var(--line); font-size: 14.5px; }
+.tc-row.one { grid-template-columns: 28px minmax(0, 1fr); }
+.tc-row .ic { font-size: 18px; line-height: 1.2; }
+/* Final: all rows (up to 11) stay; on short screens the card scrolls inside instead of cutting rows. */
+.end-page .tcard { max-height: min(62vh, 560px); overflow-y: auto; overscroll-behavior: contain; }
+
+/* ---------- Prólogo: nombre, logo, préstamo ---------- */
+.setup-page .cols { align-items: start; }
+.logo-prev { width: 100%; max-width: 200px; justify-self: center; }
+.chip.stamp { min-width: 48px; min-height: 48px; font-size: 22px; padding: 0 8px; }
+.setup-page .chips .chip { min-height: 48px; }
+
+/* ---------- Minijuegos dentro de una página ---------- */
+.game-page, .compose-page { max-width: 640px; }
+
+/* ---------- Plan ---------- */
+.mbar-wrap { position: sticky; top: 0; z-index: 5; padding-top: 2px; background: var(--bg); }
+.plan-steps .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.plan-steps .step {
+  flex-direction: column; justify-content: center; gap: 3px; padding: 6px 2px; text-align: center;
+  font-size: 13px; font-weight: 700; min-height: 56px;
+}
+.plan-steps .step .n { width: 24px; height: 24px; font-size: 12px; }
+.plan-page h2 { font-size: 22px; }
+@media (max-width: 899px) {
+  .stage-banner svg { height: 132px; width: 100%; object-fit: cover; }
+  .stage-banner .art-box { overflow: hidden; border-radius: 18px; }
+}
+
+/* ---------- Carta y audición ---------- */
+.card-page h2 { font-size: 23px; }
+.cands { display: grid; gap: 8px; }
+.cand {
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; align-items: center; text-align: left;
+  border: 1.5px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink);
+  padding: 8px 10px; min-height: 92px; cursor: pointer; width: 100%;
+}
+.cand.sel { border: 2px solid var(--pop); background: color-mix(in srgb, var(--pop) 8%, var(--paper)); }
+.cand.off { border-style: dashed; opacity: .6; cursor: default; }
+.cand-face { width: 76px; height: 76px; display: grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--chip); }
+.cand-face svg { width: 100%; height: 100%; }
+.cand-face.ini { font-family: var(--display); font-size: 30px; }
+.cand-txt { display: grid; gap: 2px; min-width: 0; }
+.cand-txt b { font-size: 17px; }
+.cand-txt .small { line-height: 1.3; }
+@media (min-width: 700px) {
+  .cands { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cand { grid-template-columns: 1fr; justify-items: center; text-align: center; align-content: start; }
+}
+
+/* ---------- Hito, descanso y final ---------- */
+.milestone-title { color: var(--pop); text-align: center; font-size: clamp(30px, 8vw, 46px); }
+.poster-pair { display: flex; gap: 10px; align-items: center; justify-content: center; min-width: 0; }
+.poster-pair > .stack { flex: 1 1 0; max-width: 170px; }
+.poster-pair .arrow { font-size: 26px; color: var(--pop); flex: none; }
+.then-now { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.then-now .box { gap: 3px; font-variant-numeric: tabular-nums; }
+.then-now .box.now { border: 2px solid var(--good); }
+.trophy-art { width: 100%; max-width: 220px; }
+@media (min-width: 900px) { .poster-pair > .stack { max-width: 220px; } }
+
+/* ---------- Mapa y libreta (ventanas) ---------- */
+.map-modal .map .pt.cur > span { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.notebook-modal .nb-table { font-size: 13.5px; }
+.notebook-modal .nb-table td:nth-child(2) { text-align: left; }
+.notebook-modal .ln b { text-align: right; }

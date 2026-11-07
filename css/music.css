@@ -1,0 +1,169 @@
+/* Music minigames: compose (.cmp-) and rhythm (.rg-). Uses the game's tokens; defines none. */
+
+/* ---------- compose ---------- */
+.cmp { display: grid; gap: 12px; color: var(--ink); font-family: var(--body); max-width: 560px; margin: 0 auto; min-width: 0; }
+.cmp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cmp-title { font-family: var(--display); font-weight: 400; font-size: 24px; margin: 0; line-height: 1.1; }
+.cmp-step { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.cmp-h { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--body); font-weight: 800; font-size: 16px; }
+.cmp-n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--pop); color: var(--on-accent); font-size: 13px; flex: none; }
+.cmp-hint { margin: 0; color: var(--muted); font-size: 14px; }
+.cmp-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.cmp-between { justify-content: space-between; }
+.cmp-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cmp-ideas { grid-template-columns: 1fr; }
+.cmp-chip, .cmp-btn, .cmp-magnet {
+  font: inherit; font-weight: 800; color: var(--ink); background: var(--chip); border: 2px solid transparent;
+  border-radius: 14px; min-height: 48px; padding: 8px 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; min-width: 0;
+}
+.cmp-chip { font-size: 15px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.cmp-chip > span[aria-hidden] { font-size: 20px; line-height: 1; }
+.cmp-small { font-size: 14px; font-weight: 700; text-align: left; align-items: flex-start; }
+.cmp-chip.cmp-on { background: var(--pop); color: var(--on-accent); }
+.cmp-chip small { font-size: 12px; font-weight: 800; line-height: 1.15; }
+.cmp-new { color: var(--pop); }
+.cmp-chip.cmp-on .cmp-new { color: var(--on-accent); }
+/* Teaser chip (style that opens later): same size, dashed and quieter, still tappable to hear it. */
+.cmp-chip.cmp-locked { background: transparent; border: 2px dashed var(--line); color: var(--muted); }
+.cmp-chip.cmp-locked > span[aria-hidden] { filter: grayscale(0.6); opacity: 0.75; }
+.cmp-lock { color: var(--muted); font-weight: 700 !important; }
+.cmp-col { display: grid; gap: 12px; min-width: 0; align-content: start; }
+.cmp-chip:focus-visible, .cmp-btn:focus-visible, .cmp-magnet:focus-visible, .cmp-cell:focus-visible, .cmp-input:focus-visible {
+  outline: 3px solid var(--sky); outline-offset: 2px;
+}
+
+/* riff grid: 4 rows x 4 (one row = one bar), so each cell is ≥ 48 px wide even on a 375 px iPhone.
+   Five faint rails show the five notes; the dot climbs a rail per tap and carries its number. Each note has
+   its own color inside its rhythm-lane family (laneOf: notes 1-2 pink, 3 blue, 4-5 yellow). */
+.cmp-grid { display: grid; grid-template-columns: repeat(4, minmax(48px, 1fr)); background: var(--chip); border-radius: 12px; padding: 3px; max-width: 420px; width: 100%; justify-self: center; }
+.cmp-cell {
+  appearance: none; border: 0; background: transparent; padding: 3px; min-height: 64px; cursor: pointer;
+  position: relative; display: block; -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-width: 0;
+  --dot: 18px; --c: var(--pop);
+}
+.cmp-cell::before { content: ""; position: absolute; inset: 3px; border-radius: 8px; background-color: var(--paper); border: 1px solid var(--line);
+  /* 5 rails, 9 px apart, through the centers of the 5 dot heights (dot center = 14 px + 9 px × note above this box's bottom) */
+  background-image: repeating-linear-gradient(to top, color-mix(in srgb, var(--muted) 30%, transparent) 0 1px, transparent 1px 9px);
+  background-size: 100% 45px; background-repeat: no-repeat; background-position: left 0 bottom 12px; }
+.cmp-dot { position: absolute; left: 50%; width: var(--dot); height: var(--dot); border-radius: 50%; transform: translateX(-50%);
+  bottom: calc(8px + var(--lvl, 0) * 9px); opacity: 0; transition: bottom 0.12s; background: var(--c);
+  color: #fff; font-size: 11px; font-weight: 800; line-height: var(--dot); text-align: center; font-family: var(--body);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 60%, #000); }
+@media (prefers-reduced-motion: reduce) { .cmp-dot { transition: none; } }
+.cmp-cell[data-lane] .cmp-dot { opacity: 1; }
+.cmp-cell[data-lane=""] .cmp-dot { opacity: 0; }
+.cmp-cell[data-lane="0"]::before { background-color: color-mix(in srgb, var(--pop) 18%, var(--paper)); }
+.cmp-cell[data-lane="1"]::before { background-color: color-mix(in srgb, var(--sky) 18%, var(--paper)); }
+.cmp-cell[data-lane="2"]::before { background-color: color-mix(in srgb, var(--sun) 24%, var(--paper)); }
+.cmp-cell[data-v="0"] { --c: color-mix(in srgb, var(--pop) 70%, #000); }
+.cmp-cell[data-v="1"] { --c: var(--pop); }
+.cmp-cell[data-v="2"] { --c: color-mix(in srgb, var(--sky) 80%, #000); }
+.cmp-cell[data-v="3"] { --c: color-mix(in srgb, var(--sun) 75%, #000); }
+.cmp-cell[data-v="4"] { --c: color-mix(in srgb, var(--sun) 80%, var(--pop)); }
+.cmp-cell.cmp-now::before { border: 2px solid var(--ink); }
+
+.cmp-magnets { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.cmp-chosen { min-height: 52px; padding: 6px; border: 2px dashed var(--line); border-radius: 14px; align-items: center; }
+.cmp-slot { min-width: 48px; min-height: 44px; border-radius: 14px; border: 2px dashed var(--line); display: grid; place-items: center;
+  color: var(--muted); font-size: 16px; }
+.cmp-slot.cmp-star { color: var(--sun); border-color: color-mix(in srgb, var(--sun) 55%, var(--line)); }
+.cmp-magnet { box-shadow: 0 2px 0 var(--line); font-size: 15px; padding: 8px 14px; overflow-wrap: anywhere; }
+.cmp-magnet.cmp-on { background: var(--pop); color: var(--on-accent); box-shadow: 0 2px 0 color-mix(in srgb, var(--pop) 60%, #000); display: inline-flex; gap: 6px; align-items: center; }
+.cmp-magnet:disabled { opacity: 0.45; cursor: default; }
+.cmp-x { font-size: 12px; opacity: 0.85; }
+.cmp-lyric { margin: 0; font-weight: 800; font-size: 17px; min-height: 1.2em; overflow-wrap: anywhere; }
+.cmp-count { font-size: 13px; font-weight: 800; color: var(--muted); background: var(--chip); border-radius: 999px; padding: 2px 10px; }
+.cmp-count.cmp-okc { color: var(--good); }
+.cmp-more { justify-self: start; }
+.cmp-input {
+  font: inherit; font-size: 18px; font-weight: 800; color: var(--ink); background: var(--bg); border: 2px solid var(--line);
+  border-radius: 14px; min-height: 52px; padding: 8px 12px; width: 100%; min-width: 0;
+}
+.cmp-input::placeholder { color: var(--muted); font-weight: 600; }
+.cmp-btn { font-size: 16px; }
+.cmp-alt { flex: 1; }
+.cmp-main { flex: 1; background: var(--pop); color: var(--on-accent); }
+.cmp-ghost { background: transparent; border-color: var(--line); min-width: 48px; }
+.cmp-actions { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; }
+.cmp-actions .cmp-btn { min-height: 56px; font-size: 17px; }
+.cmp-foot { text-align: center; }
+
+/* Mac and wide screens: style, speed, feeling and riff on the left; chorus and title on the right. */
+@media (min-width: 900px) {
+  .compose-page:has(> .cmp) { max-width: 1000px; }
+  .cmp { max-width: 1000px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; column-gap: 16px; }
+  .cmp-top, .cmp-actions, .cmp-foot { grid-column: 1 / -1; }
+}
+
+/* ---------- rhythm game ---------- */
+.rg { display: grid; gap: 10px; color: var(--ink); font-family: var(--body); max-width: 560px; margin: 0 auto; min-width: 0;
+  width: 100%; justify-self: stretch; } /* fill the column (a grid parent would otherwise shrink the lanes) */
+.rg-title { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0; line-height: 1.15; overflow-wrap: anywhere; }
+.rg-chorus { display: grid; gap: 2px; text-align: center; padding: 10px; border-radius: 14px; color: var(--on-accent);
+  background: linear-gradient(135deg, var(--pop), color-mix(in srgb, var(--pop) 40%, var(--sky))); }
+.rg-chorus[hidden] { display: none; }
+.rg-chorus.rg-wait { background: var(--chip); color: var(--muted); }
+.rg-chorus:not(.rg-wait) { animation: rg-in 0.5s ease-out; }
+@keyframes rg-in { from { transform: scale(0.96); filter: brightness(1.4); } }
+.rg-calm .rg-chorus { animation: none; }
+.rg-chorus b { font-size: 17px; overflow-wrap: anywhere; }
+.rg-chorus span { font-size: 13px; opacity: 0.9; font-weight: 700; }
+.rg-wrap { position: relative; }
+.rg-stage {
+  position: relative; height: clamp(300px, 56vh, 520px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  padding: 6px; border-radius: 16px; background: #1b1229; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: background-color 0.2s;
+}
+.rg-stage.rg-beat { animation: rg-beat 0.25s ease-out; }
+@keyframes rg-beat { from { background-color: #2a1d44; } to { background-color: #1b1229; } }
+.rg-lane { position: relative; border-radius: 10px; background: #2b2040; cursor: pointer; overflow: visible; -webkit-tap-highlight-color: transparent; }
+.rg-hit { position: absolute; left: 6px; right: 6px; bottom: 76px; height: 4px; border-radius: 4px; background: var(--sun); pointer-events: none;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sun) 60%, transparent); }
+.rg-pad { position: absolute; left: 6px; right: 6px; bottom: 6px; height: 60px; border-radius: 12px; display: grid; place-items: center;
+  border: 2px solid color-mix(in srgb, var(--lane) 70%, transparent); background: color-mix(in srgb, var(--lane) 18%, transparent);
+  color: #fff; font-weight: 800; font-size: 15px; pointer-events: none; }
+.rg-pad b { opacity: 0.7; }
+.rg-l0 { --lane: var(--pop); }
+.rg-l1 { --lane: var(--sky); }
+.rg-l2 { --lane: var(--sun); }
+.rg-note { position: absolute; top: 0; left: 50%; width: 40px; height: 40px; border-radius: 50%; background: var(--lane);
+  border: 3px solid rgba(255, 255, 255, 0.85); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lane) 35%, transparent);
+  will-change: transform; pointer-events: none; }
+.rg-note.rg-missed { opacity: 0.3; transition: opacity 0.3s; }
+.rg-note.rg-got { animation: rg-got 0.3s ease-out forwards; }
+@keyframes rg-got { to { opacity: 0; box-shadow: 0 0 0 18px color-mix(in srgb, var(--lane) 0%, transparent), 0 0 24px 8px var(--lane); } }
+.rg-fb { position: absolute; left: 0; right: 0; bottom: 92px; text-align: center; font-weight: 800; font-size: 15px; color: #fff;
+  opacity: 0; pointer-events: none; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); white-space: nowrap; }
+.rg-fb.rg-perfect { color: var(--sun); }
+.rg-fb.rg-pop { animation: rg-pop 0.6s ease-out; }
+@keyframes rg-pop { 0% { opacity: 0; transform: translateY(6px) scale(0.9); } 20% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
+.rg-pad.rg-press { animation: rg-press 0.15s ease-out; }
+@keyframes rg-press { from { background: color-mix(in srgb, var(--lane) 45%, transparent); } }
+.rg-pad.rg-glow { animation: rg-glow 0.35s ease-out; }
+@keyframes rg-glow { from { box-shadow: 0 0 22px 4px var(--lane); background: color-mix(in srgb, var(--lane) 60%, transparent); } }
+.rg-over { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center;
+  background: color-mix(in srgb, #1b1229 78%, transparent); border-radius: 16px; color: #fff; }
+.rg-over[hidden] { display: none; }
+.rg-over p { margin: 0; font-weight: 700; }
+.rg-keys { font-size: 13px; opacity: 0.8; }
+.rg-done { font-family: var(--display); font-size: 26px; font-weight: 400 !important; }
+.rg-start { font: inherit; font-weight: 800; font-size: 20px; color: var(--on-accent); background: var(--pop); border: 0; border-radius: 16px;
+  min-height: 60px; padding: 10px 28px; cursor: pointer; }
+.rg-start:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
+.rg-hud { display: grid; gap: 6px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rg-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rg-prog, .rg-energy { height: 8px; border-radius: 8px; background: var(--line); overflow: hidden; }
+.rg-energy { flex: 1; min-width: 100px; }
+.rg-prog i, .rg-energy i { display: block; height: 100%; width: 0; background: var(--pop); border-radius: 8px; }
+.rg-energy i { background: var(--sun); width: 25%; transition: width 0.3s; }
+.rg-combo { color: var(--pop); }
+
+/* Reduced motion: no pulses, pops or glows; notes still move because that is the game. */
+.rg-calm .rg-stage.rg-beat, .rg-calm .rg-fb.rg-pop, .rg-calm .rg-pad.rg-glow, .rg-calm .rg-pad.rg-press, .rg-calm .rg-note.rg-got { animation: none; }
+.rg-calm .rg-fb.rg-pop { opacity: 1; }
+.rg-calm .rg-note.rg-got { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .rg-stage, .rg-energy i, .rg-note.rg-missed { transition: none; }
+  .rg-chorus, .rg-stage.rg-beat, .rg-fb.rg-pop, .rg-pad.rg-glow, .rg-pad.rg-press, .rg-note.rg-got { animation: none; }
+}

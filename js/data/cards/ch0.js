@@ -1,0 +1,118 @@
+// Cartas del Prólogo · La cochera (HISTORIA_TMP §4.1). Son de tutorial: el 💡 tip sale solo.
+// Esquema (DISENO §7.3): { id, chapter, weight, when(s), who, title, text, tip, remind?,
+//   options: [ { label, effects: { fans, caja, talent, mood, ahorro, flag, promise }, verdict, why, lesson? } ], after? }
+// effects en pasos enteros de -3 a +3 (el motor los escala). `after` = lo que dice alguien después de decidir.
+
+const seen = (s, id) => (s.seenScenes || []).includes(id);
+// La primera carta siempre es la de las compras (justo después de firmar el pagaré); las demás salen después.
+const afterBuy = (s) => (s.seenCards || []).includes('p_compras');
+
+export default [
+  {
+    id: 'p_compras', chapter: 0, weight: 10, who: 'papa',
+    when: (s) => s.chapter === 0,
+    title: '¿Qué compramos primero?',
+    text: 'Papá les prestó $5,000. Lo básico para sonar cuesta unos $4,500, así que en la caja quedan $500 si eligen bien. En la tienda de música de la colonia, Chava les enseña todo lo que hay.',
+    tip: '💡 Primero compra lo que hace que la banda se oiga; lo bonito puede esperar.',
+    options: [
+      { label: '✨ Amplificador nuevo con lucecitas',
+        effects: { caja: -2, flag: 'ampli_nuevo' }, verdict: 'bad',
+        why: '💡 La próxima vez compara antes de comprar, porque el usado sonaba igual y costaba mucho menos. El nuevo brilla, pero se llevó casi todo.' },
+      { label: '🔊 Amplificador usado, micrófono y cables, y guardar lo que sobre',
+        effects: { talent: 1, caja: 1, flag: 'equipo_usado' }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Ya se oyen y les sobró dinero, porque compraron lo básico y lo que guardaron sirve para lo que venga. Chava: "El usado suena igualito. Nomás tiene un rayón de experiencia".' },
+      { label: '💡 Luces de colores y un micrófono rosa',
+        effects: { caja: -2, mood: 1, flag: 'sin_ampli' }, verdict: 'bad',
+        why: '💡 La próxima vez compra primero lo que hace sonar a la banda, porque sin amplificador la guitarra casi no se oye. La cochera se ve increíble, eso sí.' },
+    ],
+    after: { who: 'papa', text: '¿Cuánto les quedó en la caja? Apúntenlo. Ese número lo vamos a ver cada semana.' },
+  },
+  {
+    id: 'p_vecino', chapter: 0, weight: 3, who: 'pacheco',
+    when: (s) => s.chapter === 0 && afterBuy(s) && (s.stats?.rehearsals || 0) >= 1,
+    title: 'El vecino de la siesta',
+    text: 'Tocan el timbre. Es el Ingeniero Pacheco, el vecino: "Muy bonito todo, ¿eh? Pero yo duermo siesta de 3 a 5".',
+    tip: '💡 Busca un horario que les funcione a ustedes y también al vecino.',
+    options: [
+      { label: '🎸 Seguir igual: es nuestra cochera',
+        effects: { mood: -1 }, verdict: 'bad',
+        why: '💡 La próxima vez escucha qué necesita el otro, porque pelear les costó medio ensayo: Mamá fue a disculparse con un pastelito.' },
+      { label: '🕔 Cambiar el ensayo a las 5',
+        effects: { flag: 'ensayo_5' }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Ensayan igual de bien y el vecino duerme tranquilo, porque buscaste una hora buena para los dos. El Ingeniero hace pulgar arriba desde su ventana.' },
+      { label: '💌 Cambiar la hora e invitarlo al primer show',
+        effects: { mood: 1, flag: ['ensayo_5', 'pacheco_invitado'] }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Cuidaste su siesta y ganaste un posible fan, porque lo hiciste sentir parte. Dijo "lo pienso"... y el día del show aplaudió desde su ventana.' },
+    ],
+    after: { who: 'nina', text: 'Ensayar a las 5 es igual de bueno que a las 3. Y nadie nos odia.' },
+  },
+  {
+    id: 'p_pandero', chapter: 0, weight: 2, who: 'juju',
+    when: (s) => s.chapter === 0 && afterBuy(s) && seen(s, 'p_juju'),
+    title: 'Juju quiere tocar el pandero',
+    text: 'Juju aparece con un pandero que encontró en las cajas de Navidad. Lo toca. Mucho. Muy fuerte.',
+    tip: '💡 Juju quiere ayudar. ¿Cómo le das un lugar importante sin que se desordene el ensayo?',
+    options: [
+      { label: '🪇 Darle una canción para que toque',
+        effects: { mood: 1, flag: 'juju_pandero' }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Juju se sintió parte de la banda, porque le diste un lugar (aunque el ensayo duró el doble). Las dos funcionan: si hay tiempo, una canción; si hay prisa, el trabajo de fan.' },
+      { label: '🪧 Explicarle que su trabajo de fan es importantísimo',
+        effects: { flag: 'letrero_juju' }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Juju se fue a hacer su letrero, porque una banda necesita a quien grite hasta adelante. Las dos funcionan: si hay prisa, el trabajo de fan; si hay tiempo, una canción.' },
+    ],
+    after: { who: 'me', text: 'Una banda también necesita a alguien que grite hasta adelante.' },
+  },
+  {
+    id: 'p_video_dia1', chapter: 0, weight: 2, who: 'hermana',
+    when: (s) => s.chapter === 0 && afterBuy(s) && (s.stats?.rehearsals || 0) >= 1,
+    title: 'El video del Día 1',
+    text: '{hermana} grabó el primer ensayo, el que sonó a caja de trastes. "¿Se lo paso a Papá para que lo publique en la cuenta de la banda?".',
+    tip: '💡 A la gente le gusta ver cómo empieza una banda, no solo cómo termina.',
+    options: [
+      { label: '⏳ Esperar a que suene mejor',
+        effects: {}, verdict: 'ok',
+        why: '💡 Está bien esperar. La próxima vez piénsalo, porque a los fans les gusta acompañarte desde el Día 1, aunque suene a caja de trastes.', after: { who: 'hermana', text: 'Lo guardo de todos modos. Algún día nos vamos a reír.' } },
+      { label: '🗑️ Borrarlo',
+        effects: {}, verdict: 'ok',
+        why: '💡 Está bien no enseñarlo. La próxima vez guárdalo por lo menos, porque algún día te vas a querer acordar de cómo empezaste.', after: { who: 'hermana', text: 'Lo guardo de todos modos. Algún día nos vamos a reír.' } },
+      { label: '📲 Que Papá lo publique tal cual: "Día 1"',
+        effects: { fans: 1, flag: 'video_dia1' }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Ya tienen un "antes" para compararlo con el "después", porque se animaron a enseñar el principio. Papá les lee un comentario: "Jajaja suerte, aquí estaré para el Día 100".', after: { who: 'hermana', text: 'Día 1. Algún día nos vamos a reír de este video.' } },
+    ],
+  },
+  {
+    id: 'p_examen', chapter: 0, weight: 2, who: 'nina',
+    when: (s) => s.chapter === 0 && afterBuy(s) && (s.songs || []).length >= 1,
+    title: 'Examen de mate',
+    text: 'Nina tiene examen de mate el lunes. Dice que sí puede ensayar el domingo, pero se muerde las uñas.',
+    tip: '💡 ¿Cómo puede ensayar la banda sin que Nina se preocupe por su examen?',
+    options: [
+      { label: '📚 Ensayo cortito y luego estudiar juntas',
+        effects: { mood: 1, talent: 1 }, verdict: 'good',
+        why: '✅ ¡Gran decisión! Ensayaron y Nina llegó tranquila al examen, porque cuidaste a tu amiga y a la banda al mismo tiempo.' },
+      { label: '🎸 Ensayo largo: el show es primero',
+        effects: { talent: 1, mood: -1 }, verdict: 'bad',
+        why: '💡 La próxima vez busca un punto medio, porque Nina estaba tan preocupada que cantó pensando en fracciones.' },
+      { label: '🛋️ Cancelar el ensayo',
+        effects: {}, verdict: 'ok',
+        why: '💡 La próxima vez prueba un ensayo cortito, porque un poquito también suma y Nina igual tenía tiempo de estudiar.' },
+    ],
+    after: { who: 'mama', text: 'Una banda donde todos están tranquilos suena mejor.' },
+  },
+  {
+    id: 'p_look', chapter: 0, weight: 6, who: 'mama',
+    when: (s) => s.chapter === 0 && afterBuy(s) && (s.songs || []).length >= 1 && (s.stats?.rehearsals || 0) >= 1,
+    title: 'El look del primer show',
+    text: 'Mamá ofrece hacerles el vestuario para el show de la cochera. "¿Cómo se quieren ver?".',
+    tip: '💡 Piensa en cómo te vas a sentir arriba del escenario, no solo en cómo te vas a ver.',
+    options: [
+      { label: '🌟 Como estrellas de pop: lentejuelas por todos lados',
+        effects: { fans: 1, mood: -1, flag: 'look_lentejuelas' }, verdict: 'ok', lesson: { discover: 'ultima_silla' },
+        why: '✅ Se veían increíbles. 💡 La próxima vez elige algo que también te deje moverte, porque se la pasaron rascándose: las lentejuelas pican muchísimo.' },
+      { label: '👟 Como nosotras: tenis y playeras pintadas a mano',
+        effects: { mood: 1, flag: 'look_tenis' }, verdict: 'good', lesson: { discover: 'ultima_silla' },
+        why: '✅ ¡Gran decisión! Saltaron todo el show, porque estaban cómodas y se sentían ustedes.' },
+    ],
+    after: { who: 'mama', text: 'Se nota hasta la última silla. Bueno, hasta la tercera.' },
+  },
+];

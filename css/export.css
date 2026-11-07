@@ -1,0 +1,39 @@
+/* "Tu canción para la familia" (js/ui/export.js): card preview, progress line, share button, note.
+   Uses the tokens from styles.css; the card itself is a colorful image, the same in light and dark. */
+
+.xp-card {
+  width: 100%; max-width: 340px; justify-self: center; aspect-ratio: 1; border-radius: 18px; overflow: hidden;
+  border: 2px solid var(--line); box-shadow: var(--shadow); background: #8b5cf6;
+}
+.xp-card svg { width: 100%; height: auto; display: block; }
+
+.xp-status { font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+
+/* Indeterminate progress: a pill that slides while the song is being recorded. */
+.xp-bar { height: 8px; border-radius: 6px; background: var(--chip); overflow: hidden; position: relative; }
+.xp-bar > i {
+  position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--pop), var(--sky));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .xp-bar > i { animation: xp-slide 1.2s ease-in-out infinite alternate; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xp-bar > i { width: 100%; opacity: .6; }
+}
+@keyframes xp-slide { from { left: 0; } to { left: 60%; } }
+
+.xp-note {
+  font-size: 15px; font-weight: 700; text-align: left; background: var(--chip); color: var(--ink);
+  border-radius: 12px; padding: 8px 12px; overflow-wrap: anywhere;
+}
+.xp-result {
+  font-weight: 800; text-align: left; border-radius: 12px; padding: 8px 12px; overflow-wrap: anywhere;
+  background: color-mix(in srgb, var(--sky) 12%, var(--paper)); border: 1px solid color-mix(in srgb, var(--sky) 40%, transparent);
+}
+.xp-result.shared, .xp-result.downloaded {
+  background: color-mix(in srgb, var(--good) 12%, var(--paper)); border-color: color-mix(in srgb, var(--good) 40%, transparent);
+}
+
+.xp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.xp-actions > .btn { flex: 1 1 120px; min-width: 0; padding-inline: 10px; white-space: nowrap; }
