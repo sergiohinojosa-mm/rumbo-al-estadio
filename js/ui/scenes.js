@@ -72,22 +72,43 @@ const PLACE_ART = [
   [/^(mty|monterrey)/, { place: 'gira', city: 'mty' }],
   [/^(gira|gdl|guadalajara)/, { place: 'gira', city: 'gdl' }],
 ];
-// Home and small places without a drawn stage: her avatar with an emoji of the place.
-const PLACE_EMOJI = { coche: '🚗', viaducto: '🚗', camion: '🚐', burra: '🚐', estacionamiento: '🚐', hotel: '🏨', restaurante: '🍽️', cuarto: '🛏️', cocina_mapa: '🗺️', cocina_pagare: '📝', cocina: '🍳', pagare: '📝', super: '🛒', sala: '🛋️', premio: '🏆' };
+// Home and small places without a drawn stage: who is talking in the scene, and the place said in words
+// (an emoji alone, like 🍳 for the kitchen, didn't read as a place).
+const PLACE_HOME = {
+  coche: ['🚗', 'En el coche'], viaducto: ['🚗', 'En el coche'], camion: ['🚐', 'En la camioneta'], burra: ['🚐', 'En la camioneta'],
+  estacionamiento: ['🚐', 'En el estacionamiento'], hotel: ['🏨', 'En el hotel'], restaurante: ['🍽️', 'En el restaurante'],
+  cuarto: ['🛏️', 'En su cuarto'], cocina_mapa: ['🗺️', 'En la cocina'], cocina_pagare: ['📝', 'En la cocina'], cocina: ['🏠', 'En la cocina'],
+  pagare: ['📝', 'En la cocina'], super: ['🛒', 'En el súper'], sala: ['🛋️', 'En la sala'], premio: ['🏆', 'El premio'],
+};
+// Scene speaker → figure to draw ({teclas}/{bateria}/{bajo} → her chosen member). Narrator, cards and extras: none.
+const figureOf = (s, who) => (['teclas', 'bateria', 'bajo'].includes(who) ? s.roles?.[who] : who);
 // How full the place is, from the scene's name: estadio_vacio → empty, foro_lleno → full…
 const crowdOf = (p) => (/_vacio|_puerta|_salida|^banqueta/.test(p) ? 0 : /_lleno/.test(p) ? 1 : /_medio/.test(p) ? 0.5 : /_cachito/.test(p) ? 0.15 : 0.7);
 
-function homeStage(s, p) {
-  const key = Object.keys(PLACE_EMOJI).find((k) => p.startsWith(k));
+function homeStage(s, p, who = []) {
+  const key = Object.keys(PLACE_HOME).find((k) => p.startsWith(k));
+  const [icon, label] = PLACE_HOME[key] || ['🎶', ''];
   const A = art();
   let me = null;
   try { me = A?.avatarSvg?.(myLook(), { size: 120, guitar: p === 'cuarto', glow: false }); } catch { me = null; }
-  return h('div', { class: 'art-box art-fallback stage-art home-stage', 'aria-hidden': 'true' },
+  // Up to 2 more people who talk in this scene (Mamá in the kitchen, Papá in the car…).
+  const ids = [...new Set(who.map((w) => figureOf(s, w)))].filter((id) => id && id !== 'me' && A?.CAST_IDS?.includes(id)).slice(0, 2);
+  const others = ids.map((id) => {
+    let m = null;
+    try {
+      const look = id === 'hermana' && fill(s, '{hermana}') === 'Mariel' ? A.MARIEL_LOOK : undefined;
+      m = A.castSvg(id, { size: 120, glow: false, look });
+    } catch { m = null; }
+    return m ? h('span', { class: 'home-me', html: m }) : null;
+  });
+  return h('div', { class: 'art-box art-fallback stage-art home-stage', role: label ? 'img' : null, 'aria-label': label || null, 'aria-hidden': label ? null : 'true' },
+    label ? h('span', { class: 'home-place' }, h('span', { 'aria-hidden': 'true' }, icon), ' ', label) : null,
     me ? h('span', { class: 'home-me', html: me }) : null,
-    h('span', { class: 'home-ic' }, PLACE_EMOJI[key] || '🎶'));
+    ...others,
+    !label ? h('span', { class: 'home-ic' }, icon) : null);
 }
 
-export function sceneStage(s, place = 'cochera') {
+export function sceneStage(s, place = 'cochera', who = []) {
   const p = String(place || 'cochera');
   const hit = PLACE_ART.find(([re]) => re.test(p));
   if (!hit) {
@@ -96,7 +117,7 @@ export function sceneStage(s, place = 'cochera') {
       try { tr = art()?.trophySvg?.({ size: 160 }); } catch { tr = null; }
       if (tr) return artBox(tr, 'stage-art trophy-art', '🏆');
     }
-    return homeStage(s, p);
+    return homeStage(s, p, who);
   }
   const { place: artPlace, night, city } = hit[1];
   if (artPlace === 'cochera') {
@@ -182,7 +203,7 @@ function beatNode(s, sc, b, { fresh }) {
 function playBeats(s, ctx, sc, onEnd) {
   const beats = (sc.beats || []).filter((b) => b && (b.text || b.card));
   if (!beats.length) { onEnd(); return; }
-  const stage = sceneStage(s, sc.place);
+  const stage = sceneStage(s, sc.place, beats.map((b) => b.who));
   let i = 0;
   const draw = () => {
     const last = i === beats.length - 1;

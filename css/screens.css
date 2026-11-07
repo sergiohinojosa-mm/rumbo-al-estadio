@@ -14,6 +14,10 @@
 .home-stage .home-me { width: 110px; line-height: 0; }
 .home-stage .home-me svg { width: 100%; height: auto; }
 .home-stage .home-ic { font-size: 54px; align-self: center; }
+.home-stage { position: relative; padding-top: 40px; }
+.home-stage .home-place { position: absolute; top: 10px; left: 12px; padding: 3px 12px; border-radius: 999px; background: var(--paper);
+  border: 1px solid var(--line); font-weight: 800; font-size: 14px; line-height: 1.5; white-space: nowrap; display: inline-flex; gap: 6px; }
+@media (max-width: 380px) { .home-stage .home-me { width: 92px; } }
 .big-ic { font-size: 46px; line-height: 1; }
 .lead { font-size: 18px; font-weight: 700; }
 .big-num { font-family: var(--display); font-weight: 400; font-size: 34px; color: var(--pop); line-height: 1.1; }
