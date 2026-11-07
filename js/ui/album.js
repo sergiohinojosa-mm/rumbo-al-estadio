@@ -9,7 +9,7 @@ import { h, plural } from '../util.js';
 import { modal, sfx, toast, fill, artReady, scrollBehavior } from './core.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { svgToPng, shareFiles, safeName } from './share.js';
-import { photosOf, photoSvg, photoImg, photoNote, photoTitle, photoAlt, EXPORT_W, EXPORT_H } from './photo.js';
+import { photosOf, photoSvg, photoImg, photoNote, photoTitle, photoAlt, emo, EXPORT_W, EXPORT_H } from './photo.js';
 import { VENUE_BY_ID } from '../data/venues.js';
 
 const chapterName = (c) => {
@@ -54,7 +54,7 @@ export async function albumModal(s, { open = null } = {}) {
 
   function buildGrid(close) {
     const head = h('div', { class: 'al-head' },
-      h('h3', null, `📸 El álbum de ${sister}`),
+      h('h3', null, emo(`📸 El álbum de ${sister}`)),
       h('p', { class: 'muted small' }, list.length
         ? (list.length === 1 ? 'La foto del primer show. Tócala para verla en grande.'
           : `${plural(list.length, 'foto', 'fotos')}, una de cada show. Toca una para verla en grande.`)

@@ -5,7 +5,7 @@
 // visita, aunque esa primera vez la página cargó antes de que existiera el service worker.
 // Cada archivo se guarda por separado: si uno falta, los demás sí quedan guardados.
 // Si se agrega un archivo nuevo al juego, va en SHELL (o se guarda solo la primera vez que se pide).
-const CACHE = 'rumbo-estadio-v5';
+const CACHE = 'rumbo-estadio-v6';
 const PREFIX = 'rumbo-estadio';
 
 const JS = [

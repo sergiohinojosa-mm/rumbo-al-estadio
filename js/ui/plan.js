@@ -11,6 +11,7 @@ import * as week from '../engine/week.js';
 import { STUDIO } from '../data/chapters.js';
 import { composeScreen } from './compose.js';
 import { rehearsalScreen, songRecords } from './rehearse.js';
+import { emo } from './photo.js';
 
 // Imanes de palabras para el coro: pop, positivas, para una niña de 9 años (sin marcas ni redes sociales).
 export const WORD_BANK = [
@@ -101,12 +102,12 @@ export function renderPlan(s, ctx, { last } = {}) {
     else {
       tipSlot.replaceChildren(h('button', {
         class: 'btn alt hint-btn', type: 'button', onclick: () => { sfx('tap'); hintShown = true; paintTip(); },
-      }, '💡 Pista'), remind || '');
+      }, emo('💡 Pista')), remind || '');
     }
   };
   const buttons = opts.map((o) => {
     const b = h('button', {
-      class: `ch ${o.locked ? 'off' : ''}`, type: 'button', 'aria-pressed': 'false',
+      class: `ch wk-act ${o.locked ? 'off' : ''}`, type: 'button', 'aria-pressed': 'false', 'data-act': o.id,
       'aria-label': `${o.label}${o.cost ? `, cuesta ${money(o.cost)}` : ''}${o.locked ? `. ${o.locked}` : ''}`,
       onclick: () => {
         if (o.locked) { sfx('tap'); toast(o.locked, 3400); return; }
@@ -115,7 +116,7 @@ export function renderPlan(s, ctx, { last } = {}) {
         buttons.forEach((x) => { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', String(x === b)); });
         hintShown = modeFor(o) === 'open';
         paintTip();
-        goBtn.textContent = GO[o.id] || `✔ ${o.label}`;
+        goBtn.replaceChildren(...[emo(GO[o.id] || `✔ ${o.label}`)].flat());
         goBtn.hidden = false;
       },
     },
@@ -176,7 +177,7 @@ function apply(s, ctx, id, perf) {
         r.motiv || null,
         h('button', {
           class: 'btn big block', type: 'button', onclick: () => { sfx('tap'); ctx.refresh(); },
-        }, nextLabel)))));
+        }, emo(nextLabel))))));
 }
 
 function rehearse(s, ctx) {

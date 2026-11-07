@@ -4,7 +4,7 @@
 // Styles that open later in the story are teasers: she can hear them, not pick them yet.
 
 import { h } from '../util.js';
-import { normalizeSong, randomRiff, playSong, previewRiff, riffNote, stopMusic, laneOf, STYLES } from '../music/song.js';
+import { normalizeSong, randomRiff, playSong, previewRiff, riffNote, stopMusic, laneOf, songTiming, STYLES } from '../music/song.js';
 import { unlock } from '../music/synth.js';
 import { modal, toast } from './core.js';
 
@@ -16,6 +16,9 @@ const MIN_WORDS = 3;
 const MAX_WORDS = 6;
 const SUGGEST = 8;
 
+// Button label with its icon in its own span: the gap between them comes from CSS (.cmp-btn), and screen readers
+// read only the words.
+const ic = (icon, text) => [h('span', { class: 'cmp-ic', 'aria-hidden': 'true' }, icon), text];
 const cap = (w) => (w ? w[0].toUpperCase() + w.slice(1) : '');
 const shuffled = (a) => {
   const b = [...a];
@@ -143,6 +146,7 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
     b.firstChild.textContent = v >= 0 ? String(v + 1) : '';
     b.setAttribute('aria-label', `Cuadrito ${i + 1}: ${v >= 0 ? 'nota ' + (v + 1) : 'silencio'}`);
   };
+  const TRAIL = [{ opacity: 0.95 }, { opacity: 0.5, offset: 0.3 }, { opacity: 0 }];
   for (let i = 0; i < 16; i++) {
     const b = h('button', {
       type: 'button', class: 'cmp-cell',
@@ -151,13 +155,29 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
         st.riff[i] = st.riff[i] >= 4 ? -1 : st.riff[i] + 1;
         paintCell(i);
         if (st.riff[i] >= 0) riffNote(st.riff[i], st.mood);
+        // light trail: the pad flashes and fades (opacity only; none with reduced motion)
+        if (!calm && b.lastChild.animate) b.lastChild.animate(TRAIL, { duration: 520, easing: 'ease-out' });
       },
-    }, h('span', { class: 'cmp-dot', 'aria-hidden': 'true' }));
+    }, h('span', { class: 'cmp-dot', 'aria-hidden': 'true' }), h('span', { class: 'cmp-trail', 'aria-hidden': 'true' }));
     cells.push(b);
     grid.append(b);
     paintCell(i);
   }
-  const lightStep = (k) => cells.forEach((c, i) => c.classList.toggle('cmp-now', i === k));
+  // Playhead: the cell that sounds now glows; a cell with a note gives a little bounce (transform only). While
+  // something plays, the equalizer by the title dances at the song's beat (music.css .cmp-playing).
+  const calm = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lightStep = (k) => {
+    cells.forEach((c, i) => c.classList.toggle('cmp-now', i === k));
+    if (k >= 0) {
+      setPlaying(true);
+      if (!calm && st.riff[k] >= 0 && cells[k].animate) cells[k].animate([{ transform: 'scale(1.1)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'ease-out' });
+    } else setPlaying(!!player);
+  };
+  function setPlaying(on) {
+    if (!root) return;
+    root.classList.toggle('cmp-playing', on);
+    if (on) root.style.setProperty('--beat', `${songTiming({ tempo: st.tempo }).beat.toFixed(3)}s`);
+  }
   function playRiff(over = {}) {
     if (!alive()) return;
     stopMusic(0.05); player = null; setListen(false);
@@ -169,7 +189,7 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
   const backBtn = h('button', {
     type: 'button', class: 'cmp-btn cmp-alt', hidden: true,
     onClick: () => { if (!prevRiff) return; unlock(); st.riff = prevRiff; prevRiff = null; backBtn.hidden = true; cells.forEach((_, i) => paintCell(i)); playRiff(); },
-  }, '↩️ Volver');
+  }, ...ic('↩️', 'Volver'));
 
   // ---- 5: chorus magnets (6 slots, the first 3 marked ★) ----
   const chosenBox = h('div', { class: 'cmp-magnets cmp-chosen', 'aria-live': 'polite' });
@@ -225,17 +245,28 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
 
   // ---- listen + save ----
   const listenBtn = h('button', { type: 'button', class: 'cmp-btn cmp-alt', onClick: () => toggleListen() });
-  function setListen(on) { listenBtn.textContent = on ? '■ Parar' : '▶ Escuchar'; listenBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  function setListen(on) { listenBtn.replaceChildren(...(on ? ic('■', 'Parar') : ic('▶', 'Escuchar'))); listenBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   function toggleListen() {
     if (player) { stopAll(); return; }
     unlock();
     lightStep(-1);
-    player = playSong(finalSong(false), {
+    const fs = finalSong(false);
+    const stepMs = songTiming(fs).step * 1000;
+    player = playSong(fs, {
       loops: 1,
-      onBeat: () => { if (!alive()) stopAll(); },
-      onEnd: () => { player = null; setListen(false); },
+      // The riff is 16 steps (2 bars): light the cell that sounds now, and the next one half a beat later.
+      onBeat: ({ beat, section }) => {
+        if (!alive()) { stopAll(); return; }
+        if (!player) return;
+        if (section === 'end') { lightStep(-1); return; }
+        const k = (beat * 2) % 16;
+        lightStep(k);
+        setTimeout(() => { if (player && alive()) lightStep(k + 1); }, stepMs);
+      },
+      onEnd: () => { player = null; setListen(false); lightStep(-1); },
     });
     setListen(true);
+    setPlaying(true);
   }
   setListen(false);
 
@@ -272,7 +303,8 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
 
   const root = h('div', { class: 'cmp' },
     h('header', { class: 'cmp-top' },
-      h('h2', { class: 'cmp-title' }, editing ? '✍️ Tu canción' : '✍️ Nueva canción'),
+      h('h2', { class: 'cmp-title' }, editing ? '✍️ Tu canción' : '✍️ Nueva canción',
+        h('span', { class: 'cmp-eq', 'aria-hidden': 'true' }, h('i'), h('i'), h('i'), h('i'))),
       onCancel ? h('button', { type: 'button', class: 'cmp-btn cmp-ghost', 'aria-label': 'Salir sin guardar', onClick: cancel }, '✕') : null),
     h('div', { class: 'cmp-col' },
       step(1, '🎤 Estilo', styleRow),
@@ -282,22 +314,22 @@ export function composeScreen({ song, wordBank, chapter = 0, songs = [], onSave,
         h('p', { class: 'cmp-hint' }, 'Toca los cuadritos: cada toque sube la nota. Todas combinan.'),
         grid,
         h('div', { class: 'cmp-row' },
-          h('button', { type: 'button', class: 'cmp-btn cmp-alt', onClick: () => { unlock(); playRiff(); } }, '▶ Oír riff'),
+          h('button', { type: 'button', class: 'cmp-btn cmp-alt', onClick: () => { unlock(); playRiff(); } }, ...ic('▶', 'Oír riff')),
           h('button', {
             type: 'button', class: 'cmp-btn cmp-alt',
             onClick: () => { unlock(); prevRiff = [...st.riff]; backBtn.hidden = false; st.riff = randomRiff(); cells.forEach((_, i) => paintCell(i)); playRiff(); },
-          }, '🎲 Otro riff'),
+          }, ...ic('🎲', 'Otro riff')),
           backBtn))),
     h('div', { class: 'cmp-col' },
       step(5, '💬 Tu coro',
         h('div', { class: 'cmp-row cmp-between' }, h('span', { class: 'cmp-hint' }, 'Arma tu coro con imanes.'), counter),
         chosenBox, lyric,
         suggestBox,
-        h('button', { type: 'button', class: 'cmp-btn cmp-ghost cmp-more', onClick: () => { refreshSuggestions(); paintChorus(); } }, '🔄 Otras palabras')),
+        h('button', { type: 'button', class: 'cmp-btn cmp-ghost cmp-more', onClick: () => { refreshSuggestions(); paintChorus(); } }, ...ic('🔄', 'Otras palabras'))),
       step(6, '🏷️ Título', titleInput, ideasBox)),
     h('div', { class: 'cmp-row cmp-actions' },
       listenBtn,
-      h('button', { type: 'button', class: 'cmp-btn cmp-main', onClick: save }, '💾 Guardar')),
+      h('button', { type: 'button', class: 'cmp-btn cmp-main', onClick: save }, ...ic('💾', 'Guardar'))),
     h('p', { class: 'cmp-hint cmp-foot' }, 'Es imposible fallar. Tu coro lo cantará el público en los shows.'));
 
   paintChorus();

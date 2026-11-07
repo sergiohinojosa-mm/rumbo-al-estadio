@@ -16,7 +16,7 @@ import { karaoke, karaokeIds } from './book.js';
 import * as week from '../engine/week.js';
 import { goals } from '../engine/progress.js';
 import { sceneNode } from './prep.js';
-import { photoSvg, photoImg, photoTitle, photoAlt, photoOf } from './photo.js';
+import { photoSvg, photoImg, photoTitle, photoAlt, photoOf, emo } from './photo.js';
 import { albumModal } from './album.js';
 
 const ROUTED = new Set(['milestone', 'pause', 'end']);
@@ -131,9 +131,9 @@ export async function renderClose(s, ctx = {}) {
     setRight(
       h('h2', null, cheer),
       h('div', { class: 'sh-big num' },
-        h('span', null, `🧍 ${num(r.attendance)} de ${num(r.cap)}`),
-        h('span', null, `⭐ +${plural(r.newFans, 'fan', 'fans')}`),
-        h('span', null, `💰 ${r.earned >= 0 ? '+' : ''}${money(r.earned)}`)),
+        h('span', null, emo(`🧍 ${num(r.attendance)} de ${num(r.cap)}`)),
+        h('span', null, emo(`⭐ +${plural(r.newFans, 'fan', 'fans')}`)),
+        h('span', null, emo(`💰 ${r.earned >= 0 ? '+' : ''}${money(r.earned)}`))),
       r.comments?.[0] ? h('p', { class: 'sh-comment' }, `💬 “${r.comments[0]}”`) : null,
       h('button', { class: 'btn big block', type: 'button', onclick: () => { sfx('tap'); next(); } }, '¿Qué pasó? 👀'));
   }
@@ -170,7 +170,7 @@ export async function renderClose(s, ctx = {}) {
     const t = look.preview;
     const m = t.match(/^([A-ZÁÉÍÓÚÑ ]+):\s*([\s\S]*)$/u);
     setRight(
-      h('h2', null, '📒 Así vas'),
+      h('h2', null, emo('📒 Así vas')),
       h('div', { class: 'card sh-motiv' }, m ? [h('b', null, m[1].trim().split(/\s+/).map((w) => w[0] + w.slice(1).toLowerCase()).join(' ')), h('span', null, m[2])] : t),
       h('button', { class: 'btn big block', type: 'button', onclick: () => { sfx('tap'); next(); } }, 'Repartir las monedas 🪙'));
   }
@@ -179,7 +179,7 @@ export async function renderClose(s, ctx = {}) {
     const plan = coinPlan(s);
     if (plan.coins <= 0) {
       setRight(
-        h('h2', null, '🪙 Las monedas'),
+        h('h2', null, emo('🪙 Las monedas')),
         h('div', { class: 'card' }, plan.weekly
           ? `Esta semana los gastos (${money(plan.weekly)}) se llevaron las monedas. ¡El próximo show suma!`
           : 'Esta semana no hubo monedas para repartir. ¡El próximo show suma!'),
@@ -204,10 +204,35 @@ export async function renderClose(s, ctx = {}) {
 
     const inTray = () => plan.coins - jar.caja - jar.ahorro - jar.papa;
     const can = (k) => inTray() > 0 && (k !== 'papa' || jar.papa < papaCap);
-    const add = (k, n = 1) => { if (!can(k)) return false; jar[k] += n; sfx('coin'); paint(); return true; };
+    // from: where the coin starts (a rect) for the little flight into the jar; null = it was dropped right there.
+    const add = (k, n = 1, from = tray.querySelector('.sh-coin')?.getBoundingClientRect()) => {
+      if (!can(k)) return false;
+      jar[k] += n; sfx('coin'); paint(); flyCoin(from, k); return true;
+    };
+    // A coin flies (≈0.36 s) into the jar and the jar wobbles. Pure decoration: pointer-events none, nothing waits
+    // for it, and with "reducir movimiento" there is neither.
+    function flyCoin(from, k) {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const target = () => jarsBox.querySelector(`.pig[data-k="${k}"] .jar`);
+      const wobble = () => { const j = target(); if (!j) return; j.classList.remove('wk-wobble'); void j.offsetWidth; j.classList.add('wk-wobble'); };
+      const to = target()?.getBoundingClientRect();
+      if (!from || !to || !from.width || typeof document.body.animate !== 'function') { wobble(); return; }
+      const x0 = from.left + from.width / 2, y0 = from.top + from.height / 2;
+      const dx = to.left + to.width / 2 - x0, dy = to.top + to.height * 0.35 - y0;
+      const c = h('span', { class: 'sh-fly', 'aria-hidden': 'true', style: { left: `${x0}px`, top: `${y0}px` } });
+      document.body.append(c);
+      const a = c.animate([
+        { transform: 'translate(-50%, -50%) scale(1)' },
+        { transform: `translate(calc(-50% + ${dx / 2}px), calc(-50% + ${dy / 2 - 46}px)) scale(1.08) rotate(160deg)`, offset: 0.5 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.55) rotate(320deg)`, opacity: 0.9 },
+      ], { duration: 360, easing: 'cubic-bezier(.35, 0, .45, 1)' });
+      const done = () => { c.remove(); wobble(); };
+      a.onfinish = done; a.oncancel = done;
+    }
     const sub = (k) => { if (jar[k] <= 0) return; jar[k] -= 1; sfx('tap'); paint(); };
 
     let drag = null;
+    let shone = false;   // the goal jar's shine plays once, the first time it reaches the chapter goal
     function coinNode(idx) {
       const c = h('button', { class: 'sh-coin', type: 'button', 'aria-label': `Moneda de ${money(plan.coin)}`, 'data-i': String(idx) }, '🪙');
       c.addEventListener('pointerdown', (e) => {
@@ -239,8 +264,9 @@ export async function renderClose(s, ctx = {}) {
         jarsBox.querySelectorAll('.pig').forEach((p) => p.classList.remove('sel'));
         const wasTap = !drag.moved;
         drag = null;
-        if (target) add(target.dataset.k);
-        else if (wasTap) add(firstOpen());   // a tap moves one coin to the next jar that needs it
+        const from = wasTap ? c.getBoundingClientRect() : null;
+        if (target) add(target.dataset.k, 1, null);
+        else if (wasTap) add(firstOpen(), 1, from);   // a tap moves one coin to the next jar that needs it
       };
       c.addEventListener('pointerup', end);
       c.addEventListener('pointercancel', () => { drag?.ghost?.remove(); drag = null; c.classList.remove('lift'); });
@@ -266,7 +292,11 @@ export async function renderClose(s, ctx = {}) {
         const note = J.k === 'papa'
           ? (plan.deuda <= 0 ? '¡PAGADO!' : `faltan ${money(Math.max(0, plan.deuda - v))}`)
           : J.k === 'ahorro' ? `van ${money(s.money.ahorro + v)}` : `quedan ${money(Math.max(0, plan.caja - plan.weekly - plan.pool) + v)}`;
-        return h('div', { class: `pig sh-pig ${sug.target === J.k ? 'sh-goal' : ''}`, 'data-k': J.k },
+        // The jar of the chapter goal lights up when its coins cover what was missing (static glow + one shine).
+        const reached = sug.target === J.k && sug.left > 0 && v >= sug.left;
+        const shine = reached && !shone;
+        if (shine) shone = true;
+        return h('div', { class: `pig sh-pig ${sug.target === J.k ? 'sh-goal' : ''}${reached ? ' wk-reached' : ''}${shine ? ' wk-shine' : ''}`, 'data-k': J.k },
           h('button', {
             class: 'sh-jar-btn', type: 'button', disabled: closedPapa || !can(J.k),
             'aria-label': `Poner una moneda en ${J.name}. Lleva ${money(v)}`, onclick: () => add(J.k),
@@ -285,15 +315,15 @@ export async function renderClose(s, ctx = {}) {
     const useSug = h('button', {
       class: 'btn alt block', type: 'button',
       onclick: () => { jar.caja = 0; jar.ahorro = 0; jar.papa = 0; jar.papa = Math.min(sug.papa, papaCap); jar.ahorro = sug.ahorro; jar.caja = plan.coins - jar.papa - jar.ahorro; sfx('coin'); paint(); },
-    }, '💡 Usar la sugerencia');
+    }, emo('💡 Usar la sugerencia'));
     const ok = h('button', {
       class: 'btn big block', type: 'button',
       onclick: () => {
         const leftover = inTray();
         doClose({ caja: pesos('caja') + leftover * plan.coin, ahorro: pesos('ahorro'), papa: pesos('papa') });
       },
-    }, '🐷 Guardar en los frascos');
-    setRight(h('h2', null, '🪙 Reparte las monedas'), head, tipBox(sugText), tray, jarsBox, total, useSug, ok);
+    }, emo('🐷 Guardar en los frascos'));
+    setRight(h('h2', null, emo('🪙 Reparte las monedas')), head, tipBox(sugText), tray, jarsBox, total, useSug, ok);
   }
 
   function doClose(split) {
@@ -331,7 +361,7 @@ export async function renderClose(s, ctx = {}) {
     const extra = res.motivation && res.motivation !== look.preview ? res.motivation : null;
     const good = (r?.quality ?? 0) >= 0.6;
     setRight(
-      h('h2', null, '🔭 La próxima semana'),
+      h('h2', null, emo('🔭 La próxima semana')),
       h('div', { class: 'card sh-teaser' }, fill(s, res.teaser || '')),
       extra ? h('div', { class: 'card sh-motiv' }, extra) : null,
       streamsBox(s, res),
@@ -346,7 +376,7 @@ export async function renderClose(s, ctx = {}) {
           toast(good ? 'Gran show. Buen momento para descansar 🎶' : 'Buena semana. Buen momento para descansar 🎶', 3600);
           ctx.goHome?.();
         },
-      }, '💾 Guardar y terminar la semana'));
+      }, emo('💾 Guardar y terminar la semana')));
   }
 }
 
@@ -371,9 +401,9 @@ function tookCard(s, e) {
     h('button', { class: 'al-took-pic', type: 'button', 'aria-label': `Ver en grande: ${photoTitle(s, e, p)}`, onclick: () => open({ open: e }) },
       photoImg(svg, { alt: '' })),
     h('div', { class: 'al-took-txt' },
-      h('b', null, fill(s, '📸 {hermana} tomó una foto')),
+      h('b', null, emo(fill(s, '📸 {hermana} tomó una foto'))),
       h('span', { class: 'small' }, `“${photoTitle(s, e, p)}” ya está en su álbum.`),
-      h('button', { class: 'btn ghost', type: 'button', onclick: () => open({}) }, '📖 Ver el álbum')));
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => open({}) }, emo('📖 Ver el álbum'))));
 }
 
 // ▶️ Once a song is recorded: this week's plays and the royalties that came in by themselves (cap. 3+).

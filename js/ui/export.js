@@ -12,6 +12,7 @@ import { fillText } from '../engine/state.js';
 import * as SONG from '../music/song.js';
 import { unlock } from '../music/synth.js';
 import { svgToPng, wavBlob, shareFiles, safeName } from './share.js';
+import { emo } from './photo.js';
 
 const SIZE = 1080;
 const INK = '#2E2240';
@@ -168,10 +169,14 @@ export function exportSongModal(s, song) {
   const status = h('p', { class: 'xp-status', role: 'status' }, '🎙️ Grabando tu canción…');
   const bar = h('div', { class: 'xp-bar', 'aria-hidden': 'true' }, h('i'));
   const result = h('p', { class: 'xp-result', role: 'status', hidden: true });
-  const shareBtn = h('button', { class: 'btn big block', type: 'button', disabled: true, onclick: () => share() }, '📤 Guardar o mandar');
+  const shareBtn = h('button', { class: 'btn big block', type: 'button', disabled: true, onclick: () => share() }, emo('📤 Guardar o mandar'));
   const playBtn = h('button', { class: 'btn ghost', type: 'button', onclick: () => toggle() }, '▶ Escuchar');
 
-  const paintPlay = () => { playBtn.textContent = handle ? '❚❚ Pausa' : '▶ Escuchar'; };
+  // The card sits in its sleeve with the record peeking out; the record turns while the song plays.
+  const sleeve = h('div', { class: 'xp-sleeve' },
+    h('span', { class: 'xp-vinyl', 'aria-hidden': 'true' }),
+    h('div', { class: 'xp-card', html: songCardSvg(s, sg) }));
+  const paintPlay = () => { playBtn.textContent = handle ? '❚❚ Pausa' : '▶ Escuchar'; sleeve.classList.toggle('spin', !!handle); if (handle) sleeve.classList.add('played'); };
   function toggle() {
     sfx('tap');
     unlock();
@@ -212,11 +217,11 @@ export function exportSongModal(s, song) {
   });
 
   return modal((close) => h('div', { class: 'msg xp' },
-    h('h3', null, '🎁 Tu canción para la familia'),
-    h('div', { class: 'xp-card', html: songCardSvg(s, sg) }),
+    h('h3', null, emo('🎁 Tu canción para la familia')),
+    sleeve,
     status, bar,
     shareBtn,
-    h('p', { class: 'xp-note' }, '👨‍👩‍👧 Pídele a Papá o a Mamá que la mande a la familia.'),
+    h('p', { class: 'xp-note' }, emo('👨‍👩‍👧 Pídele a Papá o a Mamá que la mande a la familia.')),
     result,
     h('div', { class: 'xp-actions' }, playBtn,
       h('button', { class: 'btn alt', type: 'button', onclick: () => close() }, 'Cerrar'))),

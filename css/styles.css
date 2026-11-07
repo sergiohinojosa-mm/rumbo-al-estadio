@@ -443,3 +443,152 @@ label.field { display: grid; gap: 4px; font-weight: 700; }
 /* The +/− badge of a metric sits above its icon (centered), not on top of it: on a 320 px iPhone SE a
    "+$4,600" used to cover the 💰 and its face. `translate` (not transform) so the bounce animation still works. */
 .metric .delta { top: -13px; right: auto; left: 50%; translate: -50% 0; font-size: 10.5px; padding: 2px 5px; z-index: 1; }
+
+/* =====================================================================================================
+   Pase visual 1 · "brillo de escenario" (additive: no class or token was renamed or removed).
+   New tokens: --lift / --lift-hi (soft depth), --edge (3D bottom edge of tiles), --glow-pop / --glow-sky /
+   --glow-good (colored light under accent buttons). Declared on the same selectors as the theme tokens so a
+   [data-theme] panel resolves them with its own colors. Only transform/opacity are animated.
+   ===================================================================================================== */
+:root, [data-theme="light"] {
+  --lift: 0 1px 0 rgba(36, 26, 51, .04), 0 10px 24px -14px rgba(36, 26, 51, .32);
+  --lift-hi: 0 2px 0 rgba(36, 26, 51, .05), 0 18px 34px -16px rgba(36, 26, 51, .42);
+  --edge: color-mix(in srgb, var(--ink) 12%, var(--line));
+  --glow-pop: color-mix(in srgb, var(--pop) 55%, transparent);
+  --glow-sky: color-mix(in srgb, var(--sky) 55%, transparent);
+  --glow-good: color-mix(in srgb, var(--good) 55%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lift: 0 1px 0 rgba(255, 255, 255, .03), 0 12px 26px -12px rgba(0, 0, 0, .7);
+    --lift-hi: 0 2px 0 rgba(255, 255, 255, .04), 0 20px 36px -14px rgba(0, 0, 0, .8);
+    --edge: color-mix(in srgb, #000 35%, var(--line));
+    --glow-pop: color-mix(in srgb, var(--pop) 45%, transparent);
+    --glow-sky: color-mix(in srgb, var(--sky) 40%, transparent);
+    --glow-good: color-mix(in srgb, var(--good) 40%, transparent);
+  }
+}
+[data-theme="dark"] {
+  --lift: 0 1px 0 rgba(255, 255, 255, .03), 0 12px 26px -12px rgba(0, 0, 0, .7);
+  --lift-hi: 0 2px 0 rgba(255, 255, 255, .04), 0 20px 36px -14px rgba(0, 0, 0, .8);
+  --edge: color-mix(in srgb, #000 35%, var(--line));
+  --glow-pop: color-mix(in srgb, var(--pop) 45%, transparent);
+  --glow-sky: color-mix(in srgb, var(--sky) 40%, transparent);
+  --glow-good: color-mix(in srgb, var(--good) 40%, transparent);
+}
+
+/* Stage light at the top of every screen: three soft colored washes (static, no blur filter). */
+body {
+  background:
+    radial-gradient(90% 520px at 50% -140px, color-mix(in srgb, var(--pop) 11%, transparent), transparent 70%),
+    radial-gradient(55% 420px at -5% -60px, color-mix(in srgb, var(--sky) 12%, transparent), transparent 70%),
+    radial-gradient(55% 420px at 105% -60px, color-mix(in srgb, var(--sun) 20%, transparent), transparent 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+}
+
+/* Titles: a little sticker drop under the Bagel letters. */
+h1, h2 { text-shadow: 0 3px 0 color-mix(in srgb, var(--pop) 16%, transparent); }
+
+/* Buttons: candy look (top shine, bottom edge, colored glow). box-shadow only, so every
+   `background:` variant other screens define keeps working. */
+.btn { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .24), inset 0 -3px 0 rgba(0, 0, 0, .18), 0 8px 18px -10px var(--glow-pop); }
+.btn.sky { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .24), inset 0 -3px 0 rgba(0, 0, 0, .18), 0 8px 18px -10px var(--glow-sky); }
+.btn.good { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .24), inset 0 -3px 0 rgba(0, 0, 0, .18), 0 8px 18px -10px var(--glow-good); }
+.btn.alt { box-shadow: inset 0 -3px 0 var(--edge); }
+.btn.ghost, .btn:disabled, .btn[aria-disabled="true"] { box-shadow: none; }
+.icon-btn { box-shadow: inset 0 -3px 0 var(--edge); }
+.play { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .25), inset 0 -3px 0 rgba(0, 0, 0, .18), 0 6px 14px -8px var(--glow-sky); }
+
+/* Cards and tiles: soft depth; tappable tiles get a 3D bottom edge like a sticker on cardboard. */
+.card { box-shadow: var(--lift); }
+.mbar { box-shadow: var(--lift); }
+.ch, .opt, .cand, .lcard:not(.lock), .prof { box-shadow: 0 3px 0 var(--edge); }
+.ch.sel, .opt.sel, .cand.sel { box-shadow: 0 3px 0 color-mix(in srgb, var(--pop) 45%, var(--edge)), 0 0 0 4px color-mix(in srgb, var(--pop) 14%, transparent); }
+.ch.off, .ch:disabled, .opt.off, .opt:disabled:not(.sel), .cand.off { box-shadow: none; }
+.chip { box-shadow: inset 0 -2px 0 var(--edge); }
+.chip.on, .chip[aria-pressed="true"] { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), 0 6px 14px -8px var(--glow-pop); }
+.chip.no { box-shadow: none; }
+.step.now, .day.now { box-shadow: 0 0 0 4px color-mix(in srgb, var(--pop) 13%, transparent); }
+
+/* Meters: inset track and candy stripes on the chapter goal. */
+.metric .meter, .goal .meter, .voice .track { box-shadow: inset 0 1px 2px rgba(0, 0, 0, .14); }
+.goal .meter > span, .goal.done .meter > span {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .24) 0 6px, transparent 6px 12px);
+}
+
+/* Tags: little stickers. */
+.tag.new { box-shadow: 0 2px 0 color-mix(in srgb, var(--pop) 28%, transparent); }
+
+/* Avatars: a pop → sun → sky ring, like a backstage pass photo. */
+.face {
+  border: 3px solid transparent;
+  background: linear-gradient(var(--chip), var(--chip)) padding-box,
+              conic-gradient(from 210deg, var(--pop), var(--sun), var(--sky), var(--pop)) border-box;
+  box-shadow: 0 6px 14px -8px var(--glow-pop);
+}
+
+/* Story bubbles: a tail toward the speaker, a soft colored edge and a ring on the portrait. */
+.say-box { position: relative; box-shadow: 0 3px 0 color-mix(in srgb, var(--who) 22%, transparent); }
+.say-box::before {
+  content: ""; position: absolute; left: -6px; bottom: 9px; width: 11px; height: 11px; background: var(--paper);
+  border: solid color-mix(in srgb, var(--who) 55%, var(--line)); border-width: 0 0 1.5px 1.5px; transform: rotate(45deg);
+}
+.say.right .say-box::before { left: auto; right: -6px; border-width: 1.5px 1.5px 0 0; }
+.say-face { box-shadow: 0 0 0 3px color-mix(in srgb, var(--who) 18%, transparent); }
+
+/* Modals: a pink stage light behind the card and a glowing border. No backdrop blur. */
+#overlay {
+  background: radial-gradient(70% 55% at 50% 42%, color-mix(in srgb, var(--pop) 26%, transparent), transparent 70%),
+              color-mix(in srgb, #140f1c 62%, transparent);
+}
+.modal {
+  background-image: radial-gradient(120% 140px at 50% 0, color-mix(in srgb, var(--pop) 9%, transparent), transparent 75%);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--pop) 16%, transparent), 0 26px 60px -22px rgba(20, 15, 28, .65);
+}
+.toast { box-shadow: 0 12px 30px -12px var(--glow-pop), var(--shadow); }
+
+/* Lesson book: collectible cards; three stars shine gold. */
+.lcard.l3 { box-shadow: 0 3px 0 color-mix(in srgb, var(--sun) 70%, var(--edge)), 0 0 0 4px color-mix(in srgb, var(--sun) 22%, transparent); }
+
+/* Map: the current stop glows. */
+.map .pt { box-shadow: 0 2px 0 var(--edge); }
+.map .pt.done { background: color-mix(in srgb, var(--good) 7%, var(--paper)); }
+.map .pt.cur { box-shadow: 0 0 0 4px color-mix(in srgb, var(--pop) 15%, transparent), var(--lift); }
+.map .pt.q { box-shadow: none; }
+
+/* Motion: screens slide in when they change, tiles lift on hover (Mac), modals bounce in. */
+@keyframes screen-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes modal-in { 0% { opacity: 0; transform: translateY(16px) scale(.92); } 65% { opacity: 1; transform: translateY(-2px) scale(1.015); } 100% { transform: none; } }
+@keyframes ic-pop { 0% { transform: scale(.4) rotate(-12deg); opacity: 0; } 60% { transform: scale(1.18) rotate(4deg); opacity: 1; } 100% { transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  :where(#app > [data-enter]) { animation: screen-in .32s ease-out backwards; }
+  .modal { animation: modal-in .36s cubic-bezier(.2, .9, .3, 1.1); }
+  .msg .big-ic { animation: ic-pop .5s .08s ease-out backwards; }
+  .btn:active { transform: translateY(2px) scale(.98); }
+  @media (hover: hover) {
+    .btn:not(:disabled):hover, .ch:not(:disabled):hover, .opt:not(:disabled):hover, .lcard:not(.lock):hover, .prof:hover { transform: translateY(-2px); }
+    .prof { transition: transform .15s ease-out; }
+    .btn:not(:disabled):active, .ch:not(:disabled):active, .opt:not(:disabled):active, .lcard:not(.lock):active, .prof:active { transform: translateY(1px) scale(.98); }
+  }
+}
+
+/* ---------- Pase visual 2: the 4 meters are sticker badges (one tint each) ---------- */
+.metric {
+  --mk: var(--pop); padding: 6px 3px 5px; border-radius: 12px;
+  background: color-mix(in srgb, var(--mk) 11%, var(--paper));
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--mk) 24%, transparent);
+}
+.metric[data-k="caja"] { --mk: var(--good); }
+.metric[data-k="talent"] { --mk: var(--sky); }
+.metric[data-k="mood"] { --mk: var(--sun); }
+.metric .mi {
+  padding: 1px 6px; border-radius: 999px; background: var(--paper); rotate: -4deg;
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--mk) 50%, transparent), 0 2px 0 color-mix(in srgb, var(--mk) 35%, transparent);
+}
+.metric:nth-child(even) .mi { rotate: 4deg; }
+.metric .val { color: var(--ink); opacity: .82; }
+@media (max-width: 360px) { .metric .mi { padding: 1px 3px; font-size: 15px; } .mbar { gap: 4px; } }
+
+/* Leading emoji of a tip, verdict or "Recuerda" (core.js leadIcon): its own box with a steady gap. */
+.lead-ic { display: inline-block; margin-inline-end: .3em; text-indent: 0; }

@@ -10,6 +10,7 @@ import { mount, art, artReady, sfx, tipBox, verdictBox, metricBar, fill, remindB
 import * as show from '../engine/show.js';
 import * as store from '../store.js';
 import { VENUE_BY_ID } from '../data/venues.js';
+import { emo } from './photo.js';
 
 // ---- Shared stage pieces (live.js and close.js import them) ----
 const PLACE = {
@@ -135,7 +136,7 @@ export async function renderPrep(s, ctx = {}) {
 
   const sceneWrap = h('div', { class: 'sh-left' });
   const right = h('div', { class: 'sh-right stack' });
-  const page = h('div', { class: 'page sh-page' },
+  const page = h('div', { class: 'page sh-page sh-prep' },
     metricBar(s, {}, { onNotebook: ctx.openNotebook }),
     h('div', { class: 'sh-cols' }, sceneWrap, right));
 
@@ -238,7 +239,7 @@ export async function renderPrep(s, ctx = {}) {
     const o = opts.find((x) => x.venue.id === v.id);
     return [
       h('div', { class: 'row between' },
-        h('h2', null, `${v.icon} ${v.name}`),
+        h('h2', null, emo(`${v.icon} ${v.name}`)),
         opts.filter((x) => x.open).length > 1 ? h('button', { class: 'btn ghost', type: 'button', onclick: () => { sfx('tap'); ui.venueId = null; draw(); } }, 'Cambiar') : null),
       // Each place's own tip (venues.js → show.venueOptions): sombrero, permiso, "en Indie Rocks también tocan bandas de pop"…
       o?.tip ? tipBox(o.tip) : null,
@@ -246,7 +247,7 @@ export async function renderPrep(s, ctx = {}) {
         : opts.filter((x) => x.open).length === 1 ? tipBox(`${prepTip(s, opts)} Una canción propia suena más a ustedes que un cover.`) : null,
       v.pay.type === 'door' ? priceBox(v) : h('div', { class: 'stack' }, queueRow(f.expected, f.cap), h('span', { class: 'sh-count' }, `Llegarían unas ${num(f.expected)} de ${num(f.cap)}`), moneyBox(v)),
       setlistBox(),
-      h('button', { class: 'btn big block', type: 'button', onclick: confirm }, '🎤 ¡Al escenario!'),
+      h('button', { class: 'btn big block', type: 'button', onclick: confirm }, emo('🎤 ¡Al escenario!')),
     ];
   }
 
@@ -271,13 +272,14 @@ export async function renderPrep(s, ctx = {}) {
     const f = fc();
     const verdict = prepVerdict(s, v, f, ui.price);
     return [
-      h('h2', null, `🎸 ¡A tocar en ${venueEn(v)}!`),
+      // The gig poster of this Saturday (week.css .sh-poster).
+      h('h2', { class: 'sh-poster' }, emo(`🎸 ¡A tocar en ${venueEn(v)}!`)),
       verdictBox(verdict),
       // Before playing she can still change her mind: the 💡 above is for this show, not only "la próxima vez".
       verdict.verdict !== 'good' ? h('button', {
         class: 'btn alt block', type: 'button', onclick: () => { sfx('tap'); ui.confirmed = false; draw(); },
-      }, f.earnings < 0 ? `↩ Cambiar el plan (perderían ${money(-f.earnings)})` : '↩ Cambiar el plan') : null,
-      h('button', { class: 'btn big block', type: 'button', onclick: go }, '🎸 ¡A tocar!'),
+      }, emo(f.earnings < 0 ? `↩ Cambiar el plan (perderían ${money(-f.earnings)})` : '↩ Cambiar el plan')) : null,
+      h('button', { class: 'btn big block', type: 'button', onclick: go }, emo('🎸 ¡A tocar!')),
     ];
   }
 

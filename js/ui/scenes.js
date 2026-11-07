@@ -85,10 +85,15 @@ const figureOf = (s, who) => (['teclas', 'bateria', 'bajo'].includes(who) ? s.ro
 // How full the place is, from the scene's name: estadio_vacio → empty, foro_lleno → full…
 const crowdOf = (p) => (/_vacio|_puerta|_salida|^banqueta/.test(p) ? 0 : /_lleno/.test(p) ? 1 : /_medio/.test(p) ? 0.5 : /_cachito/.test(p) ? 0.15 : 0.7);
 
+// Places with a drawn room behind the figures (art.js roomSvg); the rest keep the CSS spotlight.
+const ROOM_OF = { cocina: 'cocina', pagare: 'cocina', coche: 'coche', viaducto: 'coche', camion: 'coche', burra: 'coche', hotel: 'hotel', cuarto: 'cuarto', sala: 'sala', restaurante: 'restaurante', super: 'super', estacionamiento: 'estacionamiento' };
+
 function homeStage(s, p, who = []) {
   const key = Object.keys(PLACE_HOME).find((k) => p.startsWith(k));
   const [icon, label] = PLACE_HOME[key] || ['🎶', ''];
   const A = art();
+  let room = null;
+  try { room = A?.roomSvg?.(ROOM_OF[key], { night: /noche/.test(p) }) || null; } catch { room = null; }
   let me = null;
   try { me = A?.avatarSvg?.(myLook(), { size: 120, guitar: p === 'cuarto', glow: false }); } catch { me = null; }
   // Up to 2 more people who talk in this scene (Mamá in the kitchen, Papá in the car…).
@@ -101,11 +106,15 @@ function homeStage(s, p, who = []) {
     } catch { m = null; }
     return m ? h('span', { class: 'home-me', html: m }) : null;
   });
-  return h('div', { class: 'art-box art-fallback stage-art home-stage', role: label ? 'img' : null, 'aria-label': label || null, 'aria-hidden': label ? null : 'true' },
+  const el = h('div', { class: `art-box art-fallback stage-art home-stage ${room ? 'has-room' : ''}`, role: label ? 'img' : null, 'aria-label': label || null, 'aria-hidden': label ? null : 'true' },
+    room ? h('span', { class: 'home-room', html: room }) : null,
     label ? h('span', { class: 'home-place' }, h('span', { 'aria-hidden': 'true' }, icon), ' ', label) : null,
     me ? h('span', { class: 'home-me', html: me }) : null,
     ...others,
     !label ? h('span', { class: 'home-ic' }, icon) : null);
+  // How many figures stand on the stage: CSS sizes them to the stage height without running out of width.
+  el.style.setProperty('--n', String(Math.max(1, (me ? 1 : 0) + others.filter(Boolean).length)));
+  return el;
 }
 
 export function sceneStage(s, place = 'cochera', who = []) {
@@ -212,7 +221,7 @@ function playBeats(s, ctx, sc, onEnd) {
       onclick: () => { sfx('tap'); if (last) { ctx.save(); onEnd(); } else { i += 1; draw(); } },
     }, last ? 'Seguir ▶' : 'Siguiente ▶');
     const nextTip = last && typeof sc.next === 'string' && sc.next.trim().startsWith('💡') ? nextTipBox(s, sc.next) : null;
-    mount(h('div', { class: 'page scene-page' },
+    mount(h('div', { class: 'page scene-page beats-page' },
       h('div', { class: 'cols' },
         h('div', { class: 'scene-art' }, stage),
         h('div', { class: 'stack' },

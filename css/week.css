@@ -1,1 +1,576 @@
-/* Semana: plan, carta, preparar el show y cierre. */
+/* Semana: plan, carta, preparar el show y cierre. "Backstage" look: chunky stickers with a hard drop
+   (no blur), a trading card for the dilemma, tickets and a taped setlist for the show, gold coins and
+   glass jars at the close, shiny medals for achievements.
+   Every rule is scoped to these screens' own containers (.plan-page, .card-page, .sh-prep, .sh-close),
+   so the shared classes of styles.css / screens.css / show.css look the same everywhere else.
+   Motion: transform and opacity only, always inside prefers-reduced-motion: no-preference. */
+
+/* ---------- Local tokens (sticker outline and hard drop), light and dark ---------- */
+.plan-page, .card-page, .sh-prep, .sh-close, #overlay {
+  --wk-border: color-mix(in srgb, var(--ink) 82%, var(--paper));
+  --wk-drop: color-mix(in srgb, var(--ink) 80%, transparent);
+  --wk-tape: color-mix(in srgb, var(--sun) 62%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.plan-page, .card-page, .sh-prep, .sh-close, #overlay) {
+    --wk-border: color-mix(in srgb, var(--ink) 55%, var(--paper));
+    --wk-drop: rgba(0, 0, 0, .75);
+    --wk-tape: color-mix(in srgb, var(--sun) 45%, transparent);
+  }
+}
+[data-theme="dark"] :is(.plan-page, .card-page, .sh-prep, .sh-close, #overlay),
+[data-theme="dark"]:is(.plan-page, .card-page, .sh-prep, .sh-close) {
+  --wk-border: color-mix(in srgb, var(--ink) 55%, var(--paper));
+  --wk-drop: rgba(0, 0, 0, .75);
+  --wk-tape: color-mix(in srgb, var(--sun) 45%, transparent);
+}
+
+/* ---------- The big "go" button of these screens: a stage button with a hard edge ---------- */
+:is(.plan-page, .card-page, .sh-prep, .sh-close) .btn.big {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pop) 86%, #fff), var(--pop) 70%);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--pop) 50%, #000); margin-bottom: 5px;
+  font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: .3px;
+}
+:is(.plan-page, .card-page, .sh-prep, .sh-close) .btn.big:disabled { box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  :is(.plan-page, .card-page, .sh-prep, .sh-close) .btn.big:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 color-mix(in srgb, var(--pop) 50%, #000); }
+}
+
+/* =====================================================================================
+   PLAN: the 3 afternoons + Saturday as tear-off calendar pages, activities as stickers
+   ===================================================================================== */
+.plan-page .plan-steps .steps { gap: 8px; }
+.plan-page .plan-steps .step {
+  position: relative; overflow: hidden; padding: 16px 2px 6px; border: 2.5px solid var(--wk-border); border-radius: 12px;
+  background: var(--paper); box-shadow: 0 3px 0 var(--wk-drop); margin-bottom: 3px;
+}
+/* The calendar's top band with its two ring holes. */
+.plan-page .plan-steps .step::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 10px;
+  background:
+    radial-gradient(circle at 30% 55%, var(--paper) 0 2.4px, transparent 3px),
+    radial-gradient(circle at 70% 55%, var(--paper) 0 2.4px, transparent 3px),
+    color-mix(in srgb, var(--sky) 45%, var(--paper));
+}
+.plan-page .plan-steps .step.done { border-color: var(--good); }
+.plan-page .plan-steps .step.done::before {
+  background: radial-gradient(circle at 30% 55%, var(--paper) 0 2.4px, transparent 3px),
+    radial-gradient(circle at 70% 55%, var(--paper) 0 2.4px, transparent 3px), var(--good);
+}
+.plan-page .plan-steps .step.now { border: 2.5px solid var(--pop); transform: translateY(-2px); box-shadow: 0 5px 0 color-mix(in srgb, var(--pop) 55%, #000); }
+.plan-page .plan-steps .step.now::before {
+  background: radial-gradient(circle at 30% 55%, var(--paper) 0 2.4px, transparent 3px),
+    radial-gradient(circle at 70% 55%, var(--paper) 0 2.4px, transparent 3px), var(--pop);
+}
+/* Saturday is show day: stage-light yellow. */
+.plan-page .plan-steps .step:last-child { background: color-mix(in srgb, var(--sun) 24%, var(--paper)); }
+.plan-page .plan-steps .step:last-child::before {
+  background: radial-gradient(circle at 30% 55%, var(--paper) 0 2.4px, transparent 3px),
+    radial-gradient(circle at 70% 55%, var(--paper) 0 2.4px, transparent 3px),
+    repeating-linear-gradient(-45deg, var(--sun) 0 6px, color-mix(in srgb, var(--sun) 55%, var(--pop)) 6px 12px);
+}
+.plan-page .plan-steps .step:last-child .n { background: var(--sun); color: #241a33; }
+
+/* Activity stickers: each one in its own color, slightly crooked like stickers on a guitar case.
+   Keyed on `.plan-page .choices > .ch` (not only .wk-act) so they work even with an old cached plan.js;
+   [data-act] gives each activity its color, the nth-child colors are only the fallback. */
+.plan-page .choices { gap: 14px 12px; padding: 6px 8px 8px; }
+.plan-page .choices > .ch {
+  --c: var(--sky); --rot: -1.2deg;
+  position: relative; min-height: 112px; gap: 5px; padding: 12px 8px 10px; border-radius: 22px;
+  border: 3px solid color-mix(in srgb, var(--c) 45%, var(--wk-border)); color: var(--ink);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent) 0 1.3px, transparent 1.8px) 0 0 / 12px 12px,
+    color-mix(in srgb, var(--c) 22%, var(--paper));
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--c) 50%, #000); transform: rotate(var(--rot));
+  font-family: var(--display); font-weight: 400; font-size: 19px; letter-spacing: .2px; line-height: 1.1; margin-bottom: 5px;
+}
+.plan-page .choices > .ch:nth-child(2n) { --rot: 1.2deg; }
+.plan-page .choices > .ch:nth-child(3n) { --rot: -.6deg; }
+.plan-page .choices > .ch.wide { --rot: .5deg; min-height: 100px; }
+.plan-page .choices > .ch:nth-child(6n + 1) { --c: var(--sky); }
+.plan-page .choices > .ch:nth-child(6n + 2) { --c: var(--pop); }
+.plan-page .choices > .ch:nth-child(6n + 3) { --c: var(--sun); }
+.plan-page .choices > .ch:nth-child(6n + 4) { --c: var(--good); }
+.plan-page .choices > .ch:nth-child(6n + 5) { --c: var(--calm); }
+.plan-page .choices > .ch:nth-child(6n) { --c: var(--warn); }
+.plan-page .choices > .ch[data-act="ensayar"] { --c: var(--sky); }
+.plan-page .choices > .ch[data-act="componer"] { --c: var(--pop); }
+.plan-page .choices > .ch[data-act="promover"] { --c: var(--sun); }
+.plan-page .choices > .ch[data-act="trabajito"] { --c: var(--good); }
+.plan-page .choices > .ch[data-act="descansar"] { --c: var(--calm); }
+.plan-page .choices > .ch[data-act="grabar"] { --c: var(--warn); }
+.plan-page .choices > .ch .ic {
+  width: 60px; height: 60px; display: grid; place-items: center; font-size: 34px; line-height: 1; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 18%, var(--paper)), color-mix(in srgb, var(--c) 50%, var(--paper)));
+  border: 3px solid var(--paper); box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--c) 55%, var(--wk-border)), 0 3px 0 2.5px color-mix(in srgb, var(--c) 40%, #000);
+  rotate: calc(var(--rot) * -4); margin-bottom: 3px;
+}
+.plan-page .choices > .ch small { font-family: var(--body); font-size: 13px; color: var(--ink); font-weight: 800; letter-spacing: 0; }
+.plan-page .choices > .ch.sel {
+  border-color: var(--pop); background: color-mix(in srgb, var(--pop) 22%, var(--paper));
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--pop) 55%, #000), 0 0 0 4px color-mix(in srgb, var(--pop) 22%, transparent);
+  --rot: 0deg; transform: translateY(-3px) scale(1.04);
+}
+/* The ✓ seal on the chosen sticker. */
+.plan-page .choices > .ch.sel::after {
+  content: "✓" / ""; position: absolute; top: -12px; right: -6px; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font: 900 19px/1 var(--body);
+  background: var(--pop); color: var(--on-accent); border: 3px solid var(--paper); box-shadow: 0 2px 0 var(--wk-drop);
+}
+/* Locked ("Hoy no", "No alcanza"): flat and dashed, but the words keep full contrast (muted on the page color). */
+.plan-page .choices > .ch.off {
+  border: 2.5px dashed var(--muted); background: var(--bg); box-shadow: none; --rot: 0deg; color: var(--muted);
+}
+.plan-page .choices > .ch.off small { color: var(--muted); }
+.plan-page .choices > .ch.off .ic { filter: grayscale(1); opacity: .55; box-shadow: 0 0 0 2px var(--muted); background: var(--chip); }
+@media (prefers-reduced-motion: no-preference) {
+  .plan-page .choices > .ch { transition: transform .14s ease-out; }
+  @media (hover: hover) { .plan-page .choices > .ch:not(.off):not(.sel):hover { transform: translateY(-3px) rotate(var(--rot)); } }
+  .plan-page .choices > .ch:active:not(.off) { transform: translateY(4px) rotate(var(--rot)); box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 50%, #000); }
+  .plan-page .choices > .ch.sel::after { animation: wk-seal .32s cubic-bezier(.3, 1.6, .5, 1) both; }
+}
+@keyframes wk-seal { from { transform: scale(0) rotate(-40deg); } to { transform: none; } }
+
+/* =====================================================================================
+   CARTA: the dilemma as a collectible trading card
+   ===================================================================================== */
+.card-page .dl-card {
+  position: relative; isolation: isolate; overflow: hidden; gap: 12px; padding: 16px 14px 26px; border-radius: 24px;
+  border: 5px solid transparent;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--pop) 45%, var(--paper)) 0 2.6px, transparent 3.2px) center bottom 9px / 16px 8px repeat-x padding-box,
+    linear-gradient(180deg, color-mix(in srgb, var(--pop) 12%, var(--paper)), var(--paper) 120px) padding-box,
+    linear-gradient(135deg, var(--pop), var(--sun) 32%, var(--sky) 66%, var(--pop)) border-box;
+  box-shadow: 0 6px 0 var(--wk-drop), inset 0 0 0 3px var(--paper), inset 0 0 0 5px color-mix(in srgb, var(--pop) 30%, var(--line));
+  margin-bottom: 6px;
+}
+/* The card's corner star (decoration) and the foil shine that sweeps once when it is dealt. */
+.card-page .dl-card::before {
+  content: "★" / ""; position: absolute; top: 12px; right: 12px; z-index: 1; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 19px; line-height: 1; color: #241a33;
+  background: radial-gradient(circle at 35% 30%, #fff6c9, #ffcf3d 60%, #e9a514); border: 2.5px solid var(--wk-border);
+}
+.card-page .dl-card::after {
+  content: ""; position: absolute; z-index: 2; top: -30%; bottom: -30%; left: 0; width: 38%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .42), transparent); opacity: 0; transform: translateX(-120%) rotate(18deg);
+}
+.card-page .dl-card .eyebrow {
+  justify-self: start; padding: 5px 14px; border-radius: 999px; background: var(--sky); color: var(--on-accent);
+  letter-spacing: .1em; box-shadow: 0 2px 0 var(--wk-drop); margin-right: 44px;
+}
+.card-page .dl-card h2 { font-size: 27px; padding-right: 30px; }
+.card-page .dl-card .say-box { box-shadow: 0 3px 0 color-mix(in srgb, var(--wk-drop) 35%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .card-page .dl-card { animation: wk-deal .45s cubic-bezier(.2, .9, .3, 1.15) both; }
+  .card-page .dl-card::after { animation: wk-foil 1.3s ease-in-out .45s 1 both; }
+}
+@keyframes wk-deal { from { opacity: 0; transform: translateY(18px) rotate(-3deg) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes wk-foil { 0% { opacity: 0; transform: translateX(-120%) rotate(18deg); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateX(330%) rotate(18deg); } }
+
+/* The answers: chunky tiles with a colored tab. */
+.card-page .opts { gap: 12px; padding-bottom: 4px; }
+.card-page .opt {
+  position: relative; min-height: 60px; border: 2.5px solid var(--wk-border); border-left-width: 10px; border-left-color: var(--sky);
+  border-radius: 16px; padding: 10px 14px; font-weight: 800; box-shadow: 0 4px 0 var(--wk-drop); line-height: 1.3;
+}
+.card-page .opt:nth-child(3n + 2) { border-left-color: var(--pop); }
+.card-page .opt:nth-child(3n) { border-left-color: var(--good); }
+.card-page .opt.sel {
+  border: 3px solid var(--pop); border-left-width: 10px; background: color-mix(in srgb, var(--pop) 14%, var(--paper));
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--pop) 55%, #000); padding-right: 40px;
+}
+.card-page .opt.sel::after {
+  content: "✓" / ""; position: absolute; right: 8px; top: 50%; translate: 0 -50%; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--pop); color: var(--on-accent); font-weight: 900; font-size: 16px;
+}
+/* Not chosen: flat, dashed and quieter, but the words keep AA contrast (muted on paper, no opacity). */
+.card-page .opt.off:disabled { opacity: 1; color: var(--muted); font-weight: 700; background: var(--paper); box-shadow: none; border-style: dashed dashed dashed solid; border-color: var(--muted); border-left-color: color-mix(in srgb, var(--muted) 60%, var(--paper)); }
+.card-page .opt.locked { box-shadow: none; border-style: dashed; border-left-color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .card-page .opt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--wk-drop); }
+  .card-page .opt.sel { animation: wk-pick .3s ease-out 1; }
+}
+@keyframes wk-pick { 40% { transform: scale(1.03); } }
+
+/* Auditions: each candidate is a trading card with a foil frame. */
+.card-page .cands { gap: 12px; }
+.card-page .cand {
+  border: 4px solid transparent; border-radius: 20px; box-shadow: 0 5px 0 var(--wk-drop); padding: 10px 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sky) 12%, var(--paper)), var(--paper) 60%) padding-box,
+    linear-gradient(135deg, var(--sky), var(--pop) 50%, var(--sun)) border-box;
+}
+.card-page .cand-face {
+  border: 3px solid var(--wk-border); background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--sun) 55%, var(--paper)), color-mix(in srgb, var(--pop) 30%, var(--paper)));
+}
+.card-page .cand-txt b { font-family: var(--display); font-weight: 400; font-size: 20px; }
+.card-page .cand.sel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--pop) 16%, var(--paper)), var(--paper) 70%) padding-box,
+    linear-gradient(135deg, var(--pop), var(--sun)) border-box;
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--pop) 55%, #000);
+}
+.card-page .cand.off:disabled { opacity: 1; box-shadow: none; color: var(--muted); background: var(--paper) padding-box, var(--line) border-box; }
+.card-page .cand.off:disabled .cand-face { filter: grayscale(.7); opacity: .7; }
+.card-page .cand.off:disabled .cand-txt b { color: var(--muted); }
+.card-page .cand.locked { box-shadow: none; }
+
+/* =====================================================================================
+   PREPARAR EL SHOW: venues as tickets, money as a receipt, the setlist taped to the wall
+   ===================================================================================== */
+.sh-prep .sh-right > .opts { gap: 14px; padding: 4px 2px 6px; }
+.sh-prep .sh-venue {
+  position: relative; padding: 0; gap: 0; align-items: stretch; min-height: 68px;
+  border: 2.5px solid var(--wk-border); border-radius: 14px; background: var(--paper); box-shadow: 0 4px 0 var(--wk-drop);
+}
+.sh-prep .sh-venue .ic {
+  width: 62px; flex: none; display: grid; place-items: center; font-size: 30px;
+  border-right: 2.5px dashed var(--wk-border); border-radius: 11px 0 0 11px;
+  background: color-mix(in srgb, var(--sun) 30%, var(--paper));
+}
+.sh-prep .sh-venue .sh-v { padding: 9px 12px; align-content: center; }
+.sh-prep .sh-venue:nth-child(2n) { transform: rotate(.5deg); }
+.sh-prep .sh-venue:nth-child(2n + 1) { transform: rotate(-.4deg); }
+.sh-prep .sh-venue:nth-child(3n) .ic { background: color-mix(in srgb, var(--sky) 24%, var(--paper)); }
+.sh-prep .sh-venue:nth-child(3n + 2) .ic { background: color-mix(in srgb, var(--good) 20%, var(--paper)); }
+.sh-prep .sh-venue .sh-v b { font-size: 17px; }
+/* The two bites of the ticket's perforation (page color, half circle). */
+.sh-prep .sh-venue::before, .sh-prep .sh-venue::after {
+  content: ""; position: absolute; left: 50.75px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg); border: 2.5px solid var(--wk-border); pointer-events: none;
+}
+.sh-prep .sh-venue::before { top: -11.25px; clip-path: inset(50% -2px -2px -2px); }
+.sh-prep .sh-venue::after { bottom: -11.25px; clip-path: inset(-2px -2px 50% -2px); }
+.sh-prep .sh-venue.sel { border-color: var(--pop); background: color-mix(in srgb, var(--pop) 10%, var(--paper)); box-shadow: 0 4px 0 color-mix(in srgb, var(--pop) 55%, #000); }
+.sh-prep .sh-venue.sel .ic { background: color-mix(in srgb, var(--pop) 28%, var(--paper)); border-right-color: var(--pop); }
+.sh-prep .sh-venue.sel::before, .sh-prep .sh-venue.sel::after { border-color: var(--pop); }
+.sh-prep .sh-venue.off { border-style: dashed; border-color: var(--muted); box-shadow: none; background: var(--bg); }
+.sh-prep .sh-venue.off .ic { background: transparent; border-right-color: var(--muted); filter: grayscale(1); opacity: .65; }
+.sh-prep .sh-venue.off::before, .sh-prep .sh-venue.off::after { border-color: var(--muted); border-style: dashed; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-prep .sh-venue:active:not(:disabled) { transform: translateY(3px) rotate(-.6deg); box-shadow: 0 1px 0 var(--wk-drop); }
+}
+
+/* Ticket price and the money: a box-office receipt. */
+.sh-prep .box.sh-price, .sh-prep .sh-right > .stack > .box.sh-money {
+  border: 2.5px solid var(--wk-border); border-radius: 16px; box-shadow: 0 4px 0 var(--wk-drop); padding: 12px; margin-bottom: 4px;
+}
+.sh-prep .sh-price > b:first-child { font-family: var(--display); font-weight: 400; font-size: 21px; }
+.sh-prep .box.sh-money {
+  background: color-mix(in srgb, var(--sun) 12%, var(--paper)); border: 2px dashed color-mix(in srgb, var(--sun) 60%, var(--wk-border));
+  border-radius: 10px; padding: 10px 12px; gap: 5px;
+}
+.sh-prep .sh-net { border-top: 2.5px dashed color-mix(in srgb, var(--ink) 35%, transparent); padding-top: 6px; align-items: center; }
+.sh-prep .sh-net b { font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--good); }
+.sh-prep .sh-net.neg b { color: var(--warn); }
+.sh-prep .sh-count { font-size: 17px; }
+
+/* The setlist: a sheet of lined paper taped to the wall of the garage. */
+.sh-prep .box.sh-set {
+  position: relative; margin: 14px 4px 6px; padding: 20px 14px 14px; gap: 8px; border: 0; border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 22px, color-mix(in srgb, var(--pop) 35%, transparent) 22px 24px, transparent 24px),
+    repeating-linear-gradient(180deg, transparent 0 29px, color-mix(in srgb, var(--sky) 20%, transparent) 29px 30px),
+    var(--paper);
+  box-shadow: 0 0 0 1.5px var(--line), 0 5px 0 var(--wk-drop); transform: rotate(-1deg); padding-left: 34px;
+}
+.sh-prep .box.sh-set::before, .sh-prep .box.sh-set::after {
+  content: ""; position: absolute; top: -11px; width: 74px; height: 24px; background: var(--wk-tape);
+  border-left: 2px dotted color-mix(in srgb, var(--paper) 70%, transparent); border-right: 2px dotted color-mix(in srgb, var(--paper) 70%, transparent);
+}
+.sh-prep .box.sh-set::before { left: 8px; transform: rotate(-6deg); }
+.sh-prep .box.sh-set::after { right: 8px; transform: rotate(5deg); }
+.sh-prep .sh-set > b:first-child { font-family: var(--display); font-weight: 400; font-size: 21px; color: var(--pop); line-height: 1.2; }
+.sh-prep .sh-set .chips { gap: 8px; }
+.sh-prep .sh-set .chip { border: 2px solid var(--wk-border); box-shadow: 0 3px 0 var(--wk-drop); margin-bottom: 3px; }
+.sh-prep .sh-set .chip.on, .sh-prep .sh-set .chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--pop) 55%, #000); }
+.sh-prep .sh-set .chip:disabled { box-shadow: none; border-style: dashed; opacity: .6; }
+
+/* After "¡Al escenario!": the title as a gig poster headline. */
+.sh-prep .sh-right > h2:first-child { font-size: clamp(26px, 7vw, 34px); line-height: 1.1; }
+
+/* =====================================================================================
+   CIERRE: celebration, gold coins and glass jars, shiny medals
+   ===================================================================================== */
+/* The photo of the night with two pieces of tape, like a polaroid on the fridge. */
+.sh-close .sh-photo { position: relative; }
+.sh-close .sh-photo::before, .sh-close .sh-photo::after {
+  content: ""; position: absolute; top: -10px; width: 70px; height: 22px; background: var(--wk-tape); z-index: 1;
+}
+.sh-close .sh-photo::before { left: 14px; transform: rotate(-12deg); }
+.sh-close .sh-photo::after { right: 14px; transform: rotate(10deg); }
+
+/* ¡AGOTADO! / ¡Casi lleno!: big headline with a sun underline and a burst of confetti dots. */
+.sh-close[data-step="0"] .sh-right > h2:first-child {
+  position: relative; justify-self: start; font-size: clamp(36px, 11vw, 52px); padding: 4px 46px 12px 0;
+  background: linear-gradient(var(--sun), var(--sun)) left bottom / calc(100% - 46px) 8px no-repeat;
+}
+.sh-close[data-step="0"] .sh-right > h2:first-child::after {
+  content: ""; position: absolute; top: -4px; right: 0; width: 44px; height: 48px; pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 22%, var(--sun) 0 4.5px, transparent 5.5px),
+    radial-gradient(circle at 72% 14%, var(--sky) 0 3.5px, transparent 4.5px),
+    radial-gradient(circle at 50% 52%, var(--pop) 0 4px, transparent 5px),
+    radial-gradient(circle at 86% 62%, var(--good) 0 3px, transparent 4px),
+    radial-gradient(circle at 26% 84%, var(--sky) 0 3px, transparent 4px),
+    linear-gradient(35deg, transparent 44%, var(--pop) 44% 56%, transparent 56%) 78% 92% / 12px 12px no-repeat,
+    linear-gradient(-30deg, transparent 40%, var(--sun) 40% 60%, transparent 60%) 62% 30% / 12px 12px no-repeat;
+}
+/* The three numbers of the night as stat stickers. */
+.sh-close .sh-big { grid-template-columns: repeat(auto-fit, minmax(min(100%, 136px), 1fr)); gap: 12px 10px; padding: 4px 2px 6px; }
+.sh-close .sh-big > span {
+  --c: var(--sky); display: flex; align-items: center; gap: 6px; min-height: 56px; padding: 8px 12px; border-radius: 16px;
+  border: 2.5px solid var(--wk-border); background: color-mix(in srgb, var(--c) 15%, var(--paper)); box-shadow: 0 4px 0 var(--wk-drop);
+  font-size: 21px; transform: rotate(-1.2deg);
+}
+.sh-close .sh-big > span:nth-child(2) { --c: var(--sun); transform: rotate(1deg); }
+.sh-close .sh-big > span:nth-child(3) { --c: var(--good); transform: rotate(-.5deg); }
+@media (max-width: 899px) { .sh-close .sh-big > span:last-child:nth-child(odd) { grid-column: 1 / -1; justify-content: center; } }
+.sh-close .sh-comment {
+  position: relative; background: var(--paper); border: 2px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 8px 12px; color: var(--ink); font-weight: 700;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-close[data-step="0"] .sh-right > h2:first-child { animation: wk-cheer .55s cubic-bezier(.3, 1.5, .5, 1) both; transform-origin: 20% 80%; }
+  .sh-close[data-step="0"] .sh-right > h2:first-child::after { animation: wk-burst .7s ease-out .25s both; }
+  .sh-close .sh-big > span { animation: wk-sticker .42s cubic-bezier(.3, 1.4, .5, 1) both; }
+  .sh-close .sh-big > span:nth-child(1) { animation-delay: .2s; --r: -1.2deg; }
+  .sh-close .sh-big > span:nth-child(2) { animation-delay: .32s; --r: 1deg; }
+  .sh-close .sh-big > span:nth-child(3) { animation-delay: .44s; --r: -.5deg; }
+}
+@keyframes wk-cheer { from { opacity: 0; transform: scale(.6) rotate(-6deg); } to { opacity: 1; transform: none; } }
+@keyframes wk-burst { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+@keyframes wk-sticker { from { opacity: 0; transform: scale(.7) rotate(-8deg); } to { opacity: 1; transform: rotate(var(--r, 0deg)); } }
+
+/* ✅ ⚠️ 🌤️: each line with a thick colored edge. */
+.sh-close .close3 { gap: 8px; }
+.sh-close .close3 > .sh-chain { border: 2px solid var(--line); border-left: 7px solid var(--good); border-radius: 14px; padding: 10px 12px; }
+.sh-close .close3 > .sh-chain.w { border-left-color: var(--warn); }
+.sh-close .close3 > .sh-chain.s { border-left-color: var(--calm); }
+.sh-close .sh-m { min-width: 32px; height: 32px; border: 2px solid var(--line); }
+
+/* 📒 Así vas: a page of Papá's notebook (lined, with the red margin). */
+.sh-close .card.sh-motiv {
+  border: 0; border-radius: 6px; padding: 14px 14px 14px 30px; line-height: 30px;
+  background:
+    linear-gradient(90deg, transparent 18px, color-mix(in srgb, var(--pop) 40%, transparent) 18px 20px, transparent 20px),
+    repeating-linear-gradient(180deg, transparent 0 29px, color-mix(in srgb, var(--sky) 22%, transparent) 29px 30px) 0 13px,
+    var(--paper);
+  box-shadow: 0 0 0 1.5px var(--line), 0 4px 0 var(--wk-drop); transform: rotate(.6deg);
+}
+
+/* 🪙 The coins: real gold coins (the 🪙 glyph stays for screen readers through the button's label). */
+.sh-close .sh-tray {
+  min-height: 70px; gap: 6px; padding: 10px; border-radius: 18px; border: 2.5px dashed color-mix(in srgb, var(--sun) 70%, var(--wk-border));
+  background: color-mix(in srgb, var(--sun) 10%, var(--paper));
+}
+.sh-close .sh-coin, body:has(.sh-close) .sh-ghost {
+  font-size: 0; color: transparent; position: relative; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff8d6 0 10%, #ffd84f 32%, #f2ab1c 72%, #cf8a0e 100%);
+  border: 2.5px solid #8f5d06; box-shadow: inset 0 0 0 4px rgba(255, 236, 160, .7), 0 3px 0 #6f4704;
+}
+.sh-close .sh-coin::after, body:has(.sh-close) .sh-ghost::after {
+  content: "$" / ""; position: absolute; inset: 0; display: grid; place-items: center;
+  font: 900 21px/1 var(--body); color: #7a4c05;
+}
+body:has(.sh-close) .sh-ghost { width: 54px; height: 54px; }
+.sh-close .sh-coin:nth-child(3n + 1) { rotate: -10deg; }
+.sh-close .sh-coin:nth-child(3n + 2) { rotate: 8deg; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-close .sh-coin:hover { transform: translateY(-3px); }
+  .sh-close .sh-coin:active { transform: translateY(2px); }
+}
+
+/* The three jars: glass jars with a colored lid and a shine, filling with stacked gold. */
+.sh-close .sh-jars { gap: 10px; }
+.sh-close .sh-jars .pig {
+  --jc: var(--good); padding: 8px 4px 6px; border: 2.5px solid var(--wk-border); border-radius: 18px;
+  background: color-mix(in srgb, var(--jc) 11%, var(--paper)); box-shadow: 0 4px 0 var(--wk-drop); margin-bottom: 4px;
+}
+.sh-close .sh-jars .pig[data-k="ahorro"] { --jc: var(--pop); }
+.sh-close .sh-jars .pig[data-k="papa"] { --jc: var(--sky); }
+.sh-close .sh-jars .pig.sh-goal { border-color: var(--wk-border); box-shadow: 0 4px 0 var(--wk-drop), 0 0 0 4px var(--sun); }
+.sh-close .sh-jars .pig.sel { border-color: var(--pop); background: color-mix(in srgb, var(--pop) 16%, var(--paper)); }
+.sh-close .sh-jars .jar {
+  position: relative; overflow: visible; width: 54px; height: 64px; margin-top: 9px;
+  border: 3px solid var(--wk-border); border-top-width: 3px; border-radius: 10px 10px 16px 16px;
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+.sh-close .sh-jars .jar::before {
+  content: ""; position: absolute; left: -6px; right: -6px; top: -12px; height: 11px; border-radius: 5px;
+  background: var(--jc); border: 2.5px solid var(--wk-border);
+}
+.sh-close .sh-jars .jar::after {
+  content: ""; position: absolute; left: 6px; top: 7px; bottom: 10px; width: 6px; border-radius: 4px;
+  background: rgba(255, 255, 255, .6); z-index: 1;
+}
+.sh-close .sh-jars .jar > span {
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(#fff1a8, #fff1a8) top / 100% 2px no-repeat, repeating-linear-gradient(180deg, #ffd54f 0 5px, #e9a316 5px 7px);
+}
+.sh-close .sh-jar-btn small { font-size: 13px; }
+.sh-close .sh-jar-btn b { font-family: var(--display); font-weight: 400; font-size: 19px; }
+.sh-close .sh-jars .pm button { border: 2px solid var(--wk-border); box-shadow: 0 3px 0 var(--wk-drop); background: var(--paper); }
+.sh-close .sh-jars .pm button:disabled { box-shadow: none; border-style: dashed; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-close .sh-jar-btn:active:not(:disabled) .jar { transform: scale(1.06) rotate(-3deg); }
+  .sh-close .sh-jars .jar { transition: transform .12s ease-out; }
+}
+
+/* 🔭 La próxima semana: a sticky note, and the week's totals as three chips. */
+.sh-close .card.sh-teaser {
+  position: relative; border: 0; border-radius: 4px; padding: 20px 16px 16px; font-size: 18px;
+  background: color-mix(in srgb, var(--sun) 32%, var(--paper)); box-shadow: 0 5px 0 var(--wk-drop); transform: rotate(-1deg); margin-top: 14px;
+}
+.sh-close .card.sh-teaser::before {
+  content: ""; position: absolute; top: -11px; left: 50%; width: 86px; height: 24px; margin-left: -43px;
+  background: color-mix(in srgb, var(--sky) 40%, transparent); transform: rotate(3deg);
+}
+.sh-close .al-took { border: 2px solid var(--line); box-shadow: 0 4px 0 var(--wk-drop); }
+.sh-close .al-took-pic { position: relative; }
+.sh-close .al-took-pic::before {
+  content: ""; position: absolute; top: -7px; left: 50%; width: 46px; height: 15px; margin-left: -23px; z-index: 1;
+  background: var(--wk-tape); transform: rotate(4deg);
+}
+.sh-close .sh-sum.small { font-size: 15px; padding: 8px 12px; border-radius: 999px; background: var(--chip); justify-self: start; }
+
+/* ---------- ¡Nuevos logros! (inbox.js) while on these screens: shiny gold medals ---------- */
+body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward-list { gap: 10px; }
+body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward {
+  gap: 12px; padding: 8px 12px 8px 8px; border-radius: 16px; background: var(--paper);
+  border: 2.5px solid var(--wk-border); box-shadow: 0 4px 0 var(--wk-drop); margin-bottom: 4px;
+}
+body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward b { font-size: 17px; }
+body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward .ric {
+  position: relative; overflow: hidden; width: 54px; height: 54px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; font-size: 27px; line-height: 1;
+  background: radial-gradient(circle at 34% 28%, #fff7d1 0 12%, #ffd84d 40%, #eaa11a 78%, #c98410 100%);
+  border: 3px solid #93600a; box-shadow: inset 0 0 0 3px rgba(255, 244, 190, .85), 0 3px 0 #6f4704;
+}
+body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward .ric::after {
+  content: ""; position: absolute; top: -30%; bottom: -30%; left: -10%; width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85), transparent);
+  transform: translateX(-160%) rotate(20deg); opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward { animation: wk-sticker .42s cubic-bezier(.3, 1.4, .5, 1) both; }
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward:nth-child(2) { animation-delay: .1s; }
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward:nth-child(3) { animation-delay: .2s; }
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward:nth-child(4) { animation-delay: .3s; }
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward:nth-child(n + 5) { animation-delay: .4s; }
+  body:has(:is(.plan-page, .card-page, .sh-close)) #overlay .reward .ric::after { animation: wk-medal 1.1s ease-in-out .6s 2 both; }
+}
+@keyframes wk-medal { 0% { opacity: 0; transform: translateX(-160%) rotate(20deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateX(360%) rotate(20deg); } }
+
+/* ---------- Narrow phones (iPhone SE, 320 px) ---------- */
+@media (max-width: 359px) {
+  .plan-page .choices > .ch { min-height: 100px; font-size: 17px; }
+  .plan-page .choices > .ch .ic { width: 50px; height: 50px; font-size: 28px; }
+  .card-page .dl-card { padding: 14px 10px 18px; }
+  .card-page .dl-card h2 { font-size: 24px; }
+  .sh-close .sh-jars .jar { width: 46px; height: 56px; }
+  .sh-close .sh-jars .pig { padding-inline: 2px; }
+}
+
+/* =====================================================================================
+   PASS 2
+   ===================================================================================== */
+/* A leading emoji in its own element (photo.js emo()): room before the word. In flex buttons the gap does it. */
+.emo { display: inline-block; margin-right: .22em; }
+:is(.btn, .opt, .chip) > .emo { margin-right: 0; }
+
+/* Coin flying into a jar (close.js flyCoin) and the jar's wobble when it lands. */
+.sh-fly {
+  position: fixed; z-index: 80; width: 40px; height: 40px; margin: 0; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff8d6 0 10%, #ffd84f 32%, #f2ab1c 72%, #cf8a0e 100%);
+  border: 2.5px solid #8f5d06; box-shadow: inset 0 0 0 4px rgba(255, 236, 160, .7); transform: translate(-50%, -50%); will-change: transform;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-close .sh-jars .jar.wk-wobble { animation: wk-wobble .42s cubic-bezier(.3, 1.4, .5, 1) 1; transform-origin: 50% 100%; }
+}
+@keyframes wk-wobble { 0% { transform: none; } 25% { transform: rotate(-7deg) scale(1.06, .94); } 55% { transform: rotate(5deg) scale(.97, 1.04); } 80% { transform: rotate(-2deg); } 100% { transform: none; } }
+
+/* The verdict after the dilemma: it lands like the back of the card being turned over (0.34 s). */
+.card-page .verdict { border-width: 2.5px; border-radius: 16px; box-shadow: 0 4px 0 var(--wk-drop); padding: 12px 14px; font-weight: 700; }
+@media (prefers-reduced-motion: no-preference) {
+  .card-page [aria-live] > .verdict { animation: wk-flip .34s cubic-bezier(.2, .8, .3, 1.1) both; transform-origin: 50% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-page [aria-live] > .verdict { animation: fade-in .2s ease-out both; }
+}
+@keyframes wk-flip { from { opacity: 0; transform: perspective(700px) rotateY(-80deg); } 60% { opacity: 1; } to { transform: perspective(700px) rotateY(0); } }
+
+/* Prep confirm: this Saturday's gig poster. A printed object, same colors in light and dark. */
+.sh-prep h2.sh-poster {
+  position: relative; overflow: hidden; text-align: center; color: #FFE15C; font-size: clamp(26px, 7.5vw, 36px); line-height: 1.12;
+  padding: 26px 16px 24px; border-radius: 8px; border: 3px solid #2E2240; transform: rotate(-1deg); margin: 10px 2px 6px;
+  text-shadow: 0 3px 0 #2E2240, 0 0 1px #2E2240;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, .16) 0 1.4px, transparent 2px) 0 0 / 14px 14px,
+    radial-gradient(60% 90% at 18% 0, rgba(255, 95, 168, .55), transparent 70%),
+    radial-gradient(60% 90% at 82% 0, rgba(134, 169, 255, .5), transparent 70%),
+    #2a1f45;
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--sun) 45%, var(--line)), 0 7px 0 rgba(20, 15, 28, .55);
+}
+/* Two pieces of tape and a row of stars across the bottom of the poster. */
+.sh-prep h2.sh-poster::before {
+  content: "★ ★ ★" / ""; position: absolute; left: 0; right: 0; bottom: 6px; font: 900 12px/1 var(--body); letter-spacing: 6px; color: #FF8CC6; text-shadow: none;
+}
+.sh-prep h2.sh-poster::after {
+  content: ""; position: absolute; top: -2px; left: 50%; width: 92px; height: 18px; margin-left: -46px; background: rgba(255, 225, 120, .7); transform: rotate(2deg);
+}
+.sh-prep h2.sh-poster .emo { display: block; margin: 0 auto 6px; font-size: 1.3em; text-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-prep h2.sh-poster { animation: wk-poster .4s cubic-bezier(.3, 1.4, .5, 1) both; }
+}
+@keyframes wk-poster { from { opacity: 0; transform: rotate(-6deg) scale(.85); } to { opacity: 1; transform: rotate(-1deg); } }
+
+/* Short phones (iPhone SE 375×667): the coins, the jars and "Guardar en los frascos" fit with little scrolling. */
+@media (max-height: 700px) and (max-width: 899px) {
+  .sh-close .sh-right { gap: 8px; }
+  .sh-close .sh-right > h2 { font-size: 22px; }
+  .sh-close .sh-tray { min-height: 56px; padding: 6px; gap: 4px; }
+  .sh-close .sh-coin { width: 44px; height: 44px; }
+  .sh-close .sh-jars .pig { padding: 4px 2px 4px; }
+  .sh-close .sh-jars .jar { width: 44px; height: 50px; margin-top: 8px; }
+  .sh-close .sh-jar-btn b { font-size: 17px; }
+  .sh-close .sh-jars .pm button { min-height: 44px; min-width: 44px; }
+  .sh-close .sh-right > .tip { padding: 7px 10px; font-size: 15px; }
+}
+/* Phones: on the coins step, "Guardar en los frascos" stays at the bottom of the screen while she fills the jars
+   (it settles into its place when she scrolls to the end), so it never has to be hunted for. */
+@media (max-width: 899px) {
+  .sh-close .sh-right:has(> .sh-jars) > .btn.big {
+    position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 6;
+    box-shadow: 0 5px 0 color-mix(in srgb, var(--pop) 50%, #000), 0 0 0 7px color-mix(in srgb, var(--bg) 88%, transparent);
+  }
+}
+
+/* =====================================================================================
+   PASS 3
+   ===================================================================================== */
+/* The chapter-goal jar reached its target: a static warm glow, and one shine across the glass (never loops). */
+.sh-close .sh-jars .pig.wk-reached {
+  border-color: color-mix(in srgb, var(--sun) 70%, var(--wk-border));
+  background: radial-gradient(90% 70% at 50% 35%, color-mix(in srgb, var(--sun) 38%, var(--paper)), color-mix(in srgb, var(--jc) 11%, var(--paper)));
+  box-shadow: 0 4px 0 var(--wk-drop), 0 0 0 4px var(--sun), 0 0 0 9px color-mix(in srgb, var(--sun) 30%, transparent);
+}
+.sh-close .sh-jars .pig.wk-reached .jar { border-color: color-mix(in srgb, var(--sun) 55%, var(--wk-border)); }
+.sh-close .sh-jars .pig.wk-reached .jar > span { box-shadow: 0 0 0 2px rgba(255, 241, 168, .9) inset; }
+.sh-close .sh-jars .pig { position: relative; overflow: hidden; }
+.sh-close .sh-jars .pig.wk-shine::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; width: 40%; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7), transparent); transform: translateX(-130%) rotate(16deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-close .sh-jars .pig.wk-shine::after { animation: wk-jar-shine .8s ease-out .12s 1 both; }
+}
+@keyframes wk-jar-shine { 0% { opacity: 0; transform: translateX(-130%) rotate(16deg); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateX(300%) rotate(16deg); } }
+
+/* Choosing an activity: a quick rubber-stamp "thunk" (0.24 s, CSS only, the next tap is never blocked). */
+@media (prefers-reduced-motion: no-preference) {
+  .plan-page .choices > .ch.sel { animation: wk-thunk .24s cubic-bezier(.3, 1.5, .5, 1) 1; }
+  .plan-page .choices > .ch.sel::after { animation: wk-stamp .24s cubic-bezier(.3, 1.4, .5, 1) both; }
+}
+@keyframes wk-thunk { 0% { transform: translateY(3px) scale(.95); } 100% { transform: translateY(-3px) scale(1.04); } }
+@keyframes wk-stamp { 0% { opacity: 0; transform: scale(1.8) rotate(-25deg); } 70% { opacity: 1; } 100% { opacity: 1; transform: none; } }

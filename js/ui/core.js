@@ -16,9 +16,14 @@ export const app = {
   screen: null,
 };
 
+// A new screen slides in (CSS #app > [data-enter]); redrawing the same screen (next bubble, a tap) doesn't.
+let lastScreen = '';
 export function mount(node) {
   const root = document.getElementById('app');
   stopVoice();
+  const key = typeof node?.className === 'string' ? node.className : '';
+  if (key !== lastScreen && node?.setAttribute) node.setAttribute('data-enter', '');
+  lastScreen = key;
   root.replaceChildren(node);
   window.scrollTo?.(0, 0);
 }
@@ -412,11 +417,35 @@ export function metricBar(s, deltas = {}, { onNotebook } = {}) {
     onNotebook ? h('button', { class: 'lib', type: 'button', 'aria-label': 'La libreta de Papá', onclick: () => { sfx('tap'); onNotebook(); } }, '📒') : null);
 }
 
+// A leading emoji ("💡 …", "✅ …", "📖 Recuerda…") goes in its own <span class="lead-ic"> so CSS can give it a
+// steady gap (Safari's ::first-letter is unreliable with emoji). Only the markup changes: textContent stays the same.
+const LEAD_IC = /^(\s*)((?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\uFE0F|\u20E3|[\u{1F3FB}-\u{1F3FF}]|\u200D\p{Extended_Pictographic}|\p{Regional_Indicator})*)([\s\S]*)$/u;
+export function leadIcon(t) {
+  if (typeof t === 'string') {
+    const m = t.match(LEAD_IC);
+    return m && m[3] ? [m[1] || null, h('span', { class: 'lead-ic' }, m[2]), m[3]] : t;
+  }
+  if (typeof Node !== 'undefined' && t instanceof Node) {
+    const f = t.firstChild;
+    if (f?.nodeType === 1) leadIcon(f);
+    else if (f?.nodeType === 3) {
+      const m = f.data.match(LEAD_IC);
+      if (m && (m[3] || f.nextSibling)) {
+        const ic = h('span', { class: 'lead-ic' }, m[2]);
+        t.insertBefore(ic, f);
+        if (m[1]) t.insertBefore(document.createTextNode(m[1]), ic);
+        if (m[3]) f.data = m[3]; else f.remove();
+      }
+    }
+  }
+  return t;
+}
+
 // ---- 💡 Tip (before deciding) and ✅ / 💡 verdict (after) ----
 export function tipBox(text) {
   const t = asText(text);
   const body = typeof t === 'string' && !/^\s*💡/u.test(t) ? `💡 ${t}` : t;
-  return h('div', { class: 'tip' }, body);
+  return h('div', { class: 'tip' }, leadIcon(body));
 }
 
 // 📖 Recuerda: a phrase she ALREADY discovered (level ≥ 1), said by its character at the moment of deciding.
@@ -427,7 +456,7 @@ export function remindBox(s, id) {
   if (!l?.phrase) return null;
   const by = l.by === 'hermana' ? '{hermana}' : castInfo(l.by || 'papa').name;
   return h('div', { class: 'remind stack' },
-    h('span', null, `📖 Recuerda: “${fill(s, l.phrase)}”${by ? ` (${fill(s, by)})` : ''}`),
+    h('span', null, leadIcon(`📖 Recuerda: “${fill(s, l.phrase)}”${by ? ` (${fill(s, by)})` : ''}`)),
     l.by === 'papa' && hasAudio(id) ? voicePlayer(id) : null);
 }
 
@@ -481,8 +510,8 @@ export function verdictBox({ verdict = 'good', why = '', next = '' } = {}) {
   const same = (a, b) => String(a).replace(/\s+/g, ' ').trim() === String(b).replace(/\s+/g, ' ').trim();
   if (typeof n === 'string' && typeof w === 'string' && (same(n, w) || w.includes(n.trim()))) n = '';
   return h('div', { class: `verdict ${v}`, role: 'status' },
-    w ? h('span', null, w) : null,
-    n ? h('span', { class: 'next' }, n) : null);
+    w ? h('span', null, leadIcon(w)) : null,
+    n ? h('span', { class: 'next' }, leadIcon(n)) : null);
 }
 
 // ---- Goal of the chapter: icon + have · meter · 🏁 need ----

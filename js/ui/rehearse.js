@@ -24,6 +24,7 @@ const SHAPES = ['●', '▲', '■'];     // same shapes and colors as the solo 
 // (middle half within 200 ms) and a median beyond ±60 ms, the next run shifts by that median.
 const CAL = { window: 0.3, min: 6, dead: 0.06, spread: 0.2, maxMs: 300 };
 const TUTORIAL_NOTES = 4;
+const SPARKS = 8;                  // hit burst: a ring, a light beam up the lane and 8 sparks (transform/opacity only)
 
 // Per-song best (hits) lives in s.records.songHits ({ songId: hits, 'show:songId': hits }), plain JSON.
 export const songRecords = (s) => (s?.records ? (s.records.songHits ||= {}) : null);
@@ -44,6 +45,7 @@ export function rhythmGame({
   song, seconds, mode = 'ensayo', difficulty = 1, latencyMs, settings,
   autostart = false, onDone, onChorus, onBeat, crowdCount,
   slow, songs, tutorial = false, records,
+  onFx,   // visual hook only (live.js lights the venue): onFx('beat') and onFx('hit', perfect); never affects the game
 } = {}) {
   const show = mode === 'show';
   const total = Math.max(8, Number(seconds) || (show ? 75 : 30));
@@ -88,17 +90,26 @@ export function rhythmGame({
     const fb = h('span', { class: 'rg-fb', 'aria-hidden': 'true' });
     const cue = h('span', { class: 'rg-cue-txt', 'aria-hidden': 'true', hidden: true }, '¡Ahora!');
     // On a phone the keys mean nothing: only the shape. On the Mac: shape and key.
+    const glow = h('i', { class: 'rg-pad-glow' });
     const pad = h('span', { class: 'rg-pad', 'aria-hidden': 'true' },
-      h('i', { class: 'rg-shape' }, SHAPES[i]), touch ? null : h('b', null, KEY_LABEL[i]));
+      glow, h('i', { class: 'rg-shape' }, SHAPES[i]), touch ? null : h('b', null, KEY_LABEL[i]));
+    // Hit burst, built once per lane and replayed with the Web Animations API (no new nodes, no reflow on a tap).
+    const ring = h('i', { class: 'rg-ring' });
+    const sparks = Array.from({ length: SPARKS }, () => h('i', { class: 'rg-spark' }));
+    const burst = h('span', { class: 'rg-burst', 'aria-hidden': 'true' }, ring, ...sparks);
+    const beam = h('span', { class: 'rg-beam', 'aria-hidden': 'true' });
     const lane = h('div', {
       class: `rg-lane rg-l${i}`, role: 'button', 'aria-label': touch ? `Carril ${i + 1}` : `Carril ${i + 1} (${KEY_LABEL[i]})`,
       onPointerdown: (e) => { e.preventDefault(); tap(i); },
-    }, fb, cue, pad);
-    return { lane, fb, pad, cue };
+    }, beam, fb, cue, pad, burst);
+    return { lane, fb, pad, cue, glow, ring, sparks, beam };
   });
   const hitLine = h('div', { class: 'rg-hit', 'aria-hidden': 'true' });
   const intro = h('div', { class: 'rg-intro', 'aria-live': 'polite', hidden: true }, '🎧 Escucha… ya vienen');
-  const stage = h('div', { class: 'rg-stage' }, ...lanes.map((l) => l.lane), hitLine, intro);
+  // Stage lights: two beams that sway (transform) and a glow that pulses on each beat (opacity).
+  const beatGlow = h('div', { class: 'rg-beatglow', 'aria-hidden': 'true' });
+  const lights = h('div', { class: 'rg-lights', 'aria-hidden': 'true' }, h('i'), h('i'));
+  const stage = h('div', { class: 'rg-stage' }, lights, beatGlow, ...lanes.map((l) => l.lane), hitLine, intro);
   const progress = h('i');
   const accEl = h('span', { class: 'rg-acc' }, '🎵 0 notas');  // counts up, never a %: she is 9
   const comboEl = h('span', { class: 'rg-combo' }, '');
@@ -223,7 +234,10 @@ export function rhythmGame({
     const beat = Math.floor(now / T.beat);
     if (beat !== lastBeat && now >= 0) {
       lastBeat = beat;
-      if (!calm) { stage.classList.remove('rg-beat'); void stage.offsetWidth; stage.classList.add('rg-beat'); }
+      fx(beatGlow, KF.beat, 300, 'ease-out');
+      // Intro bars (no notes yet): a light check runs across the three pads in time, inside the bars that already exist.
+      if (cursor === 0 && !intro.hidden) fx(lanes[beat % 3].glow, KF.check, 420, 'ease-out');
+      if (onFx) { try { onFx('beat'); } catch { /* visual only */ } }
     }
     if (show && !chorusShown && now >= crowdT - T.beat) {
       chorusShown = true;
@@ -231,7 +245,7 @@ export function rhythmGame({
       chorusBox.replaceChildren(h('b', null, `♪ “${lyric[0].toUpperCase() + lyric.slice(1)}” ♪`), h('span', null, crowdCount > 1 ? `🎤 ¡${Number(crowdCount).toLocaleString('es-MX')} personas cantan tu coro!` : '🎤 ¡El público canta tu coro!'));
       try { onChorus?.(s.chorus); } catch (e) { console.error(e); }
     }
-    progress.style.width = Math.max(0, Math.min(100, (now / endT) * 100)).toFixed(1) + '%';
+    progress.style.transform = `scaleX(${Math.max(0, Math.min(1, now / endT)).toFixed(3)})`;
     if (now >= endT + 1.3) { finish(); return; }
     raf = requestAnimationFrame(frame);
   }
@@ -257,7 +271,6 @@ export function rhythmGame({
     if (state !== 'play' || !clock) return;
     const t = judgeTime();
     const L = lanes[lane];
-    flash(L.pad, 'rg-press');
     // Calibration sample: how late (+) or early (−) this tap is against the nearest note of its lane, hit or not.
     let near = null;
     for (const n of notes) {
@@ -273,25 +286,66 @@ export function rhythmGame({
       const d = Math.abs(n.t - t);
       if (d <= GOOD && (!best || d < Math.abs(best.t - t))) best = n;
     }
-    if (!best) { strum(lane, s.mood); return; } // a tap with no note is just a strum: never a penalty
+    if (!best) { strum(lane, s.mood); pressFx(L); return; } // a tap with no note is just a strum: never a penalty
     const isPerfect = Math.abs(best.t - t) <= PERFECT;
     best.judged = true; best.hit = true; best.hitAt = clock();
     if (isPerfect) perfect++; else good++;
     combo++; maxCombo = Math.max(maxCombo, combo);
-    best.el.style.transform = `translate(-50%, ${geo.hitY.toFixed(1)}px) translateY(-50%)`;
+    hitSound(best.deg, s.mood, isPerfect);   // sound first: the visuals below never delay it
+    const pos = `translate(-50%, ${geo.hitY.toFixed(1)}px) translateY(-50%)`;
+    best.el.style.transform = pos;
     best.el.classList.add('rg-got');
     L.fb.textContent = isPerfect ? '¡Perfecto!' : '¡Bien!';
     L.fb.classList.toggle('rg-perfect', isPerfect);
-    flash(L.fb, 'rg-pop');
-    flash(L.pad, 'rg-glow');
-    hitSound(best.deg, s.mood, isPerfect);
     hud();
+    hitFx(L, best.el, pos, isPerfect);
+    if (onFx) { try { onFx('hit', isPerfect); } catch { /* visual only */ } }
   }
 
-  function flash(el, cls) {
-    el.classList.remove(cls);
-    void el.offsetWidth;
-    el.classList.add(cls);
+  // ---- visual feedback: Web Animations on transform and opacity only (smooth on an iPhone, no forced reflow).
+  // Reduced motion: no animation at all; the "¡Perfecto!" / "¡Bien!" text just shows (CSS .rg-calm).
+  // Keyframes built once (only the note's own position changes per hit): a beat or a tap allocates almost nothing.
+  const EASE = 'cubic-bezier(.2, .8, .3, 1)';
+  const KF = {
+    beat: [{ opacity: 1 }, { opacity: 0 }],
+    check: [{ opacity: 0.7 }, { opacity: 0 }],
+    press: [{ transform: 'scale(0.92)' }, { transform: 'scale(1)' }],
+    pressGlow: [{ opacity: 0.55 }, { opacity: 0 }],
+    hitGlow: [{ opacity: 1 }, { opacity: 0 }],
+    combo: [{ transform: 'scale(1.22)' }, { transform: 'scale(1)' }],
+    fb: [
+      { opacity: 0, transform: 'translateY(10px) scale(0.6)' },
+      { opacity: 1, transform: 'translateY(0) scale(1.12)', offset: 0.22 },
+      { opacity: 1, transform: 'translateY(-4px) scale(1)', offset: 0.6 },
+      { opacity: 0, transform: 'translateY(-16px) scale(1)' },
+    ],
+    // [good, perfect]
+    ring: [1.6, 2].map((k) => [{ opacity: 1, transform: 'translate(-50%, 50%) scale(0.5)' }, { opacity: 0, transform: `translate(-50%, 50%) scale(${k})` }]),
+    beam: [0.6, 0.95].map((o) => [{ opacity: o, transform: 'translateX(-50%) scaleY(0.25)' }, { opacity: 0, transform: 'translateX(-50%) scaleY(1)' }]),
+    sparks: [false, true].map((isPerfect) => Array.from({ length: SPARKS }, (_, k) => {
+      const a = (360 / SPARKS) * k + (isPerfect ? 0 : 22.5);
+      const d = (isPerfect ? 54 : 38) * (k % 2 ? 0.72 : 1);
+      return [{ opacity: 1, transform: `rotate(${a}deg) translateY(0) scale(1)` }, { opacity: 0, transform: `rotate(${a}deg) translateY(-${d}px) scale(0.3)` }];
+    })),
+  };
+  function fx(el, frames, ms, easing = EASE) {
+    if (calm || !el?.animate) return null;
+    try { return el.animate(frames, { duration: ms, easing }); } catch { return null; }
+  }
+  function pressFx(L) {
+    fx(L.pad, KF.press, 180);
+    fx(L.glow, KF.pressGlow, 200);
+  }
+  function hitFx(L, noteEl, pos, isPerfect) {
+    if (calm) { L.fb.classList.add('rg-pop'); return; }
+    const p = isPerfect ? 1 : 0;
+    pressFx(L);
+    fx(L.glow, KF.hitGlow, 420, 'ease-out');
+    fx(noteEl, [{ transform: `${pos} scale(1)`, opacity: 1 }, { transform: `${pos} scale(1.8)`, opacity: 0 }], 260, 'ease-out');
+    fx(L.fb, KF.fb, 650, 'ease-out');
+    fx(L.ring, KF.ring[p], 420, 'ease-out');
+    fx(L.beam, KF.beam[p], 420, 'ease-out');
+    L.sparks.forEach((sp, k) => fx(sp, KF.sparks[p][k], 480 + (k % 3) * 60, 'ease-out'));
   }
 
   function score() {
@@ -302,8 +356,10 @@ export function rhythmGame({
     const { acc, judged } = score();
     const got = perfect + good;
     accEl.textContent = `🎵 ${got} ${got === 1 ? 'nota' : 'notas'}`;
-    comboEl.textContent = combo >= 3 ? `🔥 ${combo} seguidas` : '';
-    if (show) energy.style.width = Math.round(25 + 75 * (judged ? acc : 0)) + '%';
+    const c = combo >= 3 ? `🔥 ${combo} seguidas` : '';
+    if (c && c !== comboEl.textContent) fx(comboEl, KF.combo, 240);
+    comboEl.textContent = c;
+    if (show) energy.style.transform = `scaleX(${((25 + 75 * (judged ? acc : 0)) / 100).toFixed(3)})`;
   }
 
   function onKey(e) {
@@ -366,12 +422,15 @@ export function rhythmGame({
     const head = low ? (hits ? '🎸 ¡Buen calentamiento!' : '🔥 ¡Calentaste los dedos!')
       : accuracy >= 0.85 ? '🌟 ¡Increíble!' : accuracy >= 0.6 ? '🎉 ¡Muy bien!' : '🎸 ¡La tocaste completa!';
     const line = low ? (hits ? `Tocaste ${hits} ${hits === 1 ? 'nota' : 'notas'} · ${nextSlow}` : nextSlow) : `Tocaste ${hits} de ${notes.length} notas`;
-    overlay.replaceChildren(...[
+    // The card gets one spotlight sweep as it appears, and a gold glow only for a new record (both play once).
+    overlay.replaceChildren(h('div', { class: `rg-card${low ? ' rg-card-soft' : ''}${record ? ' rg-card-record' : ''}` },
+      h('span', { class: 'rg-sweep', 'aria-hidden': 'true' }, h('i')),
+      record ? h('span', { class: 'rg-gold', 'aria-hidden': 'true' }) : null, ...[
       h('p', { class: 'rg-done' }, head),
       record ? h('p', { class: 'rg-record' }, '🏅 ¡Récord nuevo!') : null,
-      h('p', null, line),
-      maxCombo >= 3 ? h('p', null, `${maxCombo} notas seguidas sin fallar`) : null,
-    ].filter(Boolean));
+      h('p', { class: 'rg-line' }, line),
+      maxCombo >= 3 ? h('p', { class: 'rg-streak' }, `${maxCombo} notas seguidas sin fallar`) : null,
+    ].filter(Boolean)));
     overlay.hidden = false;
     // Juice for a good rehearsal (the show has its own cheer and encore in live.js).
     if (!show && accuracy >= 0.6) { sfx('cheer'); confetti(0.5); }

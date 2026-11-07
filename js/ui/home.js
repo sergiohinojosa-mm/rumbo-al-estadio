@@ -213,7 +213,10 @@ export function renderHome(s, ctx) {
         s.week > 1 ? h('span', { class: 'small muted' }, `Van en la semana ${s.week}`) : null)),
     metricBar(s, {}, { onNotebook: ctx.openNotebook }),
     h('div', { class: 'cols' },
-      h('div', { class: 'home-art' }, bandPoster(s)),
+      // The band's home stage (the cochera grows with them) with their poster stuck on like a sticker.
+      h('div', { class: 'home-hero' },
+        garageScene(s),
+        h('div', { class: 'home-poster' }, bandPoster(s))),
       h('div', { class: 'stack' },
         // Back after a few days: a warm hello, no guilt (data/motivation.js, kind G). Once per visit.
         app.awayDays >= 2 ? (() => { app.awayDays = 0; return motivCard(s, 'G', {}, { max: 2 }); })() : null,

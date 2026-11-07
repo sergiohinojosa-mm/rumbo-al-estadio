@@ -15,13 +15,14 @@
   position: absolute; inset: 0 auto 0 0; width: 40%; border-radius: 6px;
   background: linear-gradient(90deg, var(--pop), var(--sky));
 }
+/* Slides with transform (not left): 150% of its own 40% width = the other 60% of the bar. */
 @media (prefers-reduced-motion: no-preference) {
-  .xp-bar > i { animation: xp-slide 1.2s ease-in-out infinite alternate; }
+  .xp-bar > i { animation: xp-slide 1.2s ease-in-out infinite alternate; will-change: transform; }
 }
 @media (prefers-reduced-motion: reduce) {
   .xp-bar > i { width: 100%; opacity: .6; }
 }
-@keyframes xp-slide { from { left: 0; } to { left: 60%; } }
+@keyframes xp-slide { from { transform: translateX(0); } to { transform: translateX(150%); } }
 
 .xp-note {
   font-size: 15px; font-weight: 700; text-align: left; background: var(--chip); color: var(--ink);
@@ -37,3 +38,31 @@
 
 .xp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .xp-actions > .btn { flex: 1 1 120px; min-width: 0; padding-inline: 10px; white-space: nowrap; }
+
+/* ---------- The single's sleeve: the cover with its record peeking out on the right ----------
+   The record is CSS only (it never goes into the PNG). It slides out when the modal opens and turns while
+   the song plays (.spin, set by export.js). Same colors in light and dark: it's an object, like the card. */
+.xp-sleeve { position: relative; width: 100%; max-width: 380px; justify-self: center; padding-right: 15%; min-width: 0; }
+.xp-sleeve .xp-card { position: relative; z-index: 1; max-width: none; width: 100%; border-radius: 10px; border: 3px solid #2E2240;
+  box-shadow: 0 6px 0 rgba(20, 15, 28, .55); }
+.xp-vinyl {
+  position: absolute; z-index: 0; right: 0; top: 7%; width: 80%; aspect-ratio: 1; border-radius: 50%;
+  background:
+    conic-gradient(from 20deg, transparent 0 6%, rgba(255, 255, 255, .26) 11%, transparent 17% 50%, rgba(255, 255, 255, .2) 57%, transparent 64%),
+    radial-gradient(circle, #FFFDF6 0 2.6%, #FF5FA8 3% 15%, #FFCF5C 15.5% 17%, #16101f 17.5% 100%);
+  box-shadow: inset 0 0 0 2px #2E2240, 0 4px 0 rgba(20, 15, 28, .45);
+}
+/* The grooves, as a separate layer so the record can turn without redrawing them. */
+.xp-vinyl::before {
+  content: ""; position: absolute; inset: 6%; border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 3px, rgba(255, 255, 255, .12) 3px 4px);
+  -webkit-mask: radial-gradient(circle, transparent 0 24%, #000 25%); mask: radial-gradient(circle, transparent 0 24%, #000 25%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .xp-vinyl { animation: xp-vinyl-out .7s cubic-bezier(.2, .9, .3, 1.2) .15s both; }
+  .xp-sleeve.played .xp-vinyl { animation: none; }
+  .xp-sleeve.spin .xp-vinyl { animation: xp-spin 2.2s linear infinite; }
+}
+@keyframes xp-vinyl-out { from { transform: translateX(-28%) rotate(-90deg); } to { transform: none; } }
+@keyframes xp-spin { to { transform: rotate(1turn); } }
+.xp .xp-status.done { color: var(--ink); }

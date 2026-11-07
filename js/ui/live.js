@@ -51,7 +51,34 @@ export async function renderLive(s, ctx = {}) {
   const head = h('div', { class: 'sh-stage-head' },
     h('span', null, `${v?.icon || '🎤'} ${v?.name || 'Escenario'}`),
     h('span', { class: 'num' }, `🧍 ${num(crowd.count)} de ${num(crowd.cap)}`));
-  const paintScene = () => sceneBox.replaceChildren(head, sceneNode(s, { venueId: prep.venueId, count: crowd.count, cap: crowd.cap, lit: crowd.lit }), lyric);
+  // Stage lights over the drawing (two sweeping beams); at the chorus they brighten and notes float up (show.css .sh-fx).
+  // Daytime venues (same list as prep.js) get no beams, only the glow and the floating notes.
+  const day = ['cochera', 'cumple', 'cafe', 'kermes', 'plaza'].includes(prep.venueId);
+  const glow = h('em', { class: 'sh-glow' });
+  const pops = ['♥', '♪', '★', '♫'].map((c) => h('s', null, c));   // one floats up from the crowd on each hit
+  const fxLayer = h('div', { class: `sh-fx${day ? ' sh-day' : ''}`, 'aria-hidden': 'true' }, h('i'), h('i'), glow,
+    ...['♪', '♥', '♫', '♪', '♥', '♫'].map((c) => h('b', null, c)), ...pops);
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Keyframes and options built once: a beat or a hit only starts an animation (no allocation, no layout).
+  const BEAT = [[{ opacity: 0.55 }, { opacity: 0 }], [{ opacity: 0.9 }, { opacity: 0 }]];
+  const BEAT_OPT = { duration: 320, easing: 'ease-out' };
+  const POP = pops.map((_, i) => [false, true].map((perfect) => [
+    { opacity: 0, transform: 'translateY(0) scale(0.5)' },
+    { opacity: 1, transform: 'translateY(-20px) scale(1.1)', offset: 0.25 },
+    { opacity: 0, transform: `translateY(-${perfect ? 90 : 60}px) scale(1) rotate(${i % 2 ? 12 : -12}deg)` },
+  ]));
+  const POP_OPT = { duration: 900, easing: 'ease-out' };
+  let popN = 0;
+  // Beat: the venue glow breathes. Hit: a heart or a note rises from the crowd (each from its own spot in show.css).
+  const onFx = (kind, perfect) => {
+    if (calm || !glow.animate) return;
+    if (kind === 'beat') { glow.animate(BEAT[crowd.lit ? 1 : 0], BEAT_OPT); return; }
+    const i = popN++ % pops.length;
+    pops[i].animate(POP[i][perfect ? 1 : 0], POP_OPT);
+  };
+  const paintScene = () => sceneBox.replaceChildren(head,
+    h('div', { class: `sh-scene-wrap${crowd.lit ? ' sh-lit' : ''}` }, sceneNode(s, { venueId: prep.venueId, count: crowd.count, cap: crowd.cap, lit: crowd.lit }), fxLayer),
+    lyric);
   paintScene();
 
   const right = h('div', { class: 'sh-right stack' });
@@ -72,8 +99,10 @@ export async function renderLive(s, ctx = {}) {
       lyric.textContent = `♪ “${line.charAt(0).toUpperCase()}${line.slice(1)}” ♪`;
     },
     onDone: (r) => afterSong(r),
+    onFx,
   });
   right.append(game);
+  page.classList.add('sh-playing');   // phone: venue strip + game fit one screen while she plays (show.css)
   mount(page);
 
   function excited(acc) {
@@ -84,6 +113,7 @@ export async function renderLive(s, ctx = {}) {
   // The solo is always offered when someone is there: it's fun, not a prize. The encore bonus (playShow's
   // encore) still needs an excited crowd, so the balance doesn't change.
   function afterSong(r) {
+    page.classList.remove('sh-playing');
     const acc = Number.isFinite(r?.accuracy) ? r.accuracy : 0.7;
     const hype = excited(acc);
     const rec = r?.record ? h('p', { class: 'sh-record' }, '🏅 ¡Récord nuevo!') : null;
@@ -135,7 +165,7 @@ export async function renderLive(s, ctx = {}) {
     const timer = setInterval(() => {
       if (!pads.isConnected) { clearInterval(timer); handle?.stop?.(0.2); return; }
       const k = Math.min(1, (performance.now() - t0) / ms);
-      bar.style.width = `${(k * 100).toFixed(1)}%`;
+      bar.style.transform = `scaleX(${k.toFixed(3)})`;
       if (k >= 1) { clearInterval(timer); handle?.stop?.(0.6); sfx('cheer'); finish(acc, encore); }
     }, 100);
   }

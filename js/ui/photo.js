@@ -282,5 +282,13 @@ export function photoImg(svg, { alt = '', cls = '', keep = null } = {}) {
   return img;
 }
 
+// "💡 Pista" → [<span class="emo">💡</span>, " Pista"]: the same text, with the leading emoji in its own element so
+// CSS can give it room (an emoji glyph has no side bearing and touches the next word). Anything else stays as is.
+const LEAD_EMO = /^((?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\uFE0F|\u20E3|[\u{1F3FB}-\u{1F3FF}]|\u200D\p{Extended_Pictographic}|\p{Regional_Indicator})*)(\s[\s\S]*)$/u;
+export function emo(text) {
+  const m = typeof text === 'string' ? text.match(LEAD_EMO) : null;
+  return m ? [h('span', { class: 'emo' }, m[1]), m[2]] : text;
+}
+
 export const EXPORT_W = 1080;
 export const EXPORT_H = Math.round((EXPORT_W * 340) / 400);

@@ -10,6 +10,7 @@ import {
 import * as week from '../engine/week.js';
 import { candidates } from '../engine/state.js';
 import { LABELS } from '../data/chapters.js';
+import { emo } from './photo.js';
 
 const ROLE_ICON = { teclas: '🎹', bateria: '🥁', bajo: '🎸' };
 const ROLES = ['teclas', 'bateria', 'bajo'];
@@ -50,7 +51,7 @@ export function renderCard(s, ctx) {
   const tipSlot = h('div');
   const paintTip = () => tipSlot.replaceChildren(hintShown ? tipBox(c.tip) : h('button', {
     class: 'btn alt hint-btn', type: 'button', onclick: () => { sfx('tap'); hintShown = true; paintTip(); },
-  }, '💡 Pista'));
+  }, emo('💡 Pista')));
   if (c.tip && mode !== 'none') paintTip();
 
   // Same 📖 Recuerda as the plan and the price: the phrase, who said it, and ▶ when Papá recorded it.
@@ -90,9 +91,9 @@ export function renderCard(s, ctx) {
     const after = res.after || null;
     result.replaceChildren(...[
       verdictBox(res),
-      extra.length ? h('div', { class: 'box small' }, extra.map((t) => h('span', null, t))) : null,
+      extra.length ? h('div', { class: 'box small' }, extra.map((t) => h('span', null, emo(t)))) : null,
       after?.text ? bubble(whoOf(s, after.who || c.who), after.text, { right: after.who === 'me' }) : null,
-      h('button', { class: 'btn big block', type: 'button', onclick: () => { sfx('tap'); ctx.refresh(); } }, s.phase === 'scene' ? 'Seguir ▶' : '🎤 Preparar el show ▶')].filter(Boolean));
+      h('button', { class: 'btn big block', type: 'button', onclick: () => { sfx('tap'); ctx.refresh(); } }, emo(s.phase === 'scene' ? 'Seguir ▶' : '🎤 Preparar el show ▶'))].filter(Boolean));
     result.scrollIntoView?.({ behavior: scrollBehavior(), block: 'nearest' });
   };
 
@@ -120,8 +121,8 @@ export function renderCard(s, ctx) {
       const off = locked(o);
       const b = h('button', {
         class: `opt${off ? ' locked' : ''}`, type: 'button', 'aria-pressed': 'false', disabled: off || null, onclick: () => choose(i),
-      }, off ? h('span', { class: 'opt-txt' }, h('span', null, fill(s, o.label)), h('span', { class: 'small opt-why' }, `🐷 ${reasonOf(o)}`))
-        : fill(s, o.label));
+      }, off ? h('span', { class: 'opt-txt' }, h('span', null, emo(fill(s, o.label))), h('span', { class: 'small opt-why' }, `🐷 ${reasonOf(o)}`))
+        : emo(fill(s, o.label)));
       buttons.push(b);
       return b;
     }));
@@ -130,7 +131,7 @@ export function renderCard(s, ctx) {
   mount(h('div', { class: 'page card-page' },
     bar,
     h('div', { class: 'cols' },
-      h('div', { class: 'stack' },
+      h('div', { class: `stack dl-card${audition ? ' dl-aud' : ''}` },
         h('p', { class: 'eyebrow' }, audition ? `${ROLE_ICON[c.role] || '🎶'} Audición` : '📩 Carta de la semana'),
         h('h2', null, fill(s, c.title)),
         audition ? null : bubble(whoOf(s, c.who), c.text, { name: castName(s, whoOf(s, c.who)) }),

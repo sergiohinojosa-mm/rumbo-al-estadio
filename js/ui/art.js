@@ -1154,3 +1154,84 @@ export function lookEditor(look, onChange, unlocks = {}) {
   render();
   return root;
 }
+
+// ---------------------------------------------------------------- Cuartos (fondos de escenas en casa)
+// Fondo plano para los lugares sin escenario dibujado: cocina, coche, hotel, su cuarto y la sala.
+// viewBox 360×420 (y de -180 a 240) con el piso desde y=180: los muebles van abajo (0-240) y arriba solo pared con
+// un detalle, porque en el teléfono el escenario es alto y en la Mac es ancho. Se recorta con "slice" pegado abajo. Solo fondo (las figuras van encima en HTML). Pocos nodos y colores pastel para que ellas resalten.
+const win = (x, y, w, hh, sky, extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="4" fill="${sky}" stroke="#fff" stroke-width="5"/>${extra}<rect x="${x}" y="${y}" width="${w}" height="${hh}" rx="4" fill="none" ${OL}/><path d="M${x + w / 2} ${y}v${hh}M${x} ${y + hh / 2}h${w}" stroke="#fff" stroke-width="4"/>`;
+const skyOf = (n) => (n ? '#2C2A5E' : '#BDE7FF');
+const moonSun = (x, y, n) => (n ? `<circle cx="${x}" cy="${y}" r="7" fill="#FFF3B0"/><circle cx="${x + 3}" cy="${y - 2}" r="6" fill="#2C2A5E"/>` : `<circle cx="${x}" cy="${y}" r="8" fill="#FFD23D"/>`);
+const dim = (n) => (n ? `<rect y="-180" width="360" height="420" fill="#1A1033" opacity=".32"/>` : '');
+const floorMk = (c, lines = '#0000') => `<rect y="180" width="360" height="60" fill="${c}"/><path d="M0 180H360" stroke="${INK}" stroke-width="1.2" opacity=".3"/><path d="M0 200H360M0 222H360" stroke="${lines}" stroke-width="1.4"/>`;
+const ROOMS = {
+  cocina: (n) => `<rect y="-180" width="360" height="420" fill="#FCE7CF"/><circle cx="212" cy="-40" r="22" fill="#fff" ${OL}/><path d="M212 -54v14h10" stroke="${INK}" stroke-width="2.4" fill="none" stroke-linecap="round"/>` + papelPicado(-150, 9, 0, 360, 10) + `<rect y="112" width="360" height="40" fill="#DFF1F5"/><path d="M0 125H360M0 139H360M24 112v40M48 112v40M72 112v40M96 112v40M120 112v40M144 112v40M168 112v40M192 112v40M216 112v40M240 112v40M264 112v40" stroke="#BFDDE6" stroke-width="1.2"/>` +
+    win(34, 30, 84, 62, skyOf(n), moonSun(56, 50, n)) + `<path d="M28 26q18 30 0 72zM124 26q-18 30 0 72z" fill="#FF8CC6" ${OLT}/><path d="M24 26H128" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` +
+    `<rect x="146" y="22" width="132" height="54" rx="4" fill="#F6B8C8" ${OL}/><path d="M190 22v54M234 22v54" stroke="${INK}" stroke-width="1.2"/><path d="M182 62h0M198 62h0M226 62h0M242 62h0" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>` +
+    `<rect x="-4" y="152" width="290" height="32" fill="#9ED3C2" ${OL}/><rect x="-4" y="146" width="290" height="9" rx="2" fill="#F4F1EA" ${OL}/><path d="M60 158v20M130 158v20M200 158v20" stroke="${INK}" stroke-width="1" opacity=".5"/>` +
+    `<path d="M150 146v-14h26v14z" fill="#E23B4B" ${OL}/><path d="M146 132h34" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/><rect x="236" y="130" width="14" height="16" rx="3" fill="#FFC83D" ${OL}/><circle cx="243" cy="122" r="9" fill="#5CC27A" ${OLT}/>` +
+    `<rect x="290" y="44" width="62" height="140" rx="8" fill="#E9EEF6" ${OL}/><path d="M290 100h62" stroke="${INK}" stroke-width="1.2"/><path d="M300 70v18M300 112v24" stroke="#9AA6BA" stroke-width="4" stroke-linecap="round"/><circle cx="330" cy="66" r="5" fill="#FF6FAE" ${OLT}/><rect x="322" y="116" width="12" height="9" fill="#FFD23D" ${OLT}/><path d="M336 80l4 -8 4 8z" fill="#5EC8F2" ${OLT}/>` +
+    floorMk('#E8C7A0', '#D9B48A') + dim(n),
+  coche: (n) => {
+    const sky = skyOf(n), city = n ? '#3B3570' : '#9FB6D8';
+    const lights = n ? dots([[40, 96], [52, 84], [84, 92], [118, 80], [130, 98], [222, 90], [236, 78], [270, 96], [300, 84], [318, 100]], '#FFD23D', 3) : '';
+    return `<rect y="-180" width="360" height="420" fill="${n ? '#3E3554' : '#6E6286'}"/><path d="M0 -40Q180 -70 360 -40" stroke="#2A2238" stroke-width="6" fill="none"/><rect x="160" y="-110" width="40" height="16" rx="6" fill="#FFF3B0" ${OL}/><path d="M14 30Q16 14 34 14H326Q344 14 346 30L352 128H8Z" fill="${sky}" stroke="#2A2238" stroke-width="6"/>` +
+      moonSun(296, 36, n) + `<path d="M8 128V92h22V70h20v22h24V58h28v40h22V80h30v48zM190 128V86h24V64h22v30h26V76h20v24h22V60h26v68z" fill="${city}"/>` + lights +
+      `<path d="M8 112H352" stroke="${n ? '#5A5290' : '#C9D6EA'}" stroke-width="5"/><rect x="172" y="14" width="16" height="116" fill="#2A2238"/>` +
+      `<rect x="40" y="104" width="62" height="34" rx="12" fill="#C2557E" ${OL}/><rect x="258" y="104" width="62" height="34" rx="12" fill="#C2557E" ${OL}/>` +
+      `<path d="M10 140Q10 128 24 128H336Q350 128 350 140V196H10Z" fill="#D46A8A" ${OL}/><path d="M120 132v62M240 132v62" stroke="#A84C70" stroke-width="2"/><path d="M14 160H346" stroke="#E98AA8" stroke-width="3"/>` +
+      `<rect y="194" width="360" height="46" fill="#2F283E"/>` + dim(n);
+  },
+  hotel: (n) => `<rect y="-180" width="360" height="420" fill="#E8E1F8"/><path d="M0 -60H360" stroke="#C9BCEB" stroke-width="8"/><path d="M24 -180v360M72 -180v360M120 -180v360M168 -180v360M216 -180v360M264 -180v360M312 -180v360" stroke="#DCD2F2" stroke-width="10"/>` +
+    win(248, 30, 84, 86, skyOf(n), moonSun(310, 52, n) + `<path d="M250 116V92h16V80h18v14h14V86h18v30z" fill="${n ? '#3B3570' : '#9FB6D8'}"/>`) + `<path d="M240 24q16 46 4 98h-10V24zM340 24q-16 46 -4 98h10V24z" fill="#7B5CC4" ${OLT}/><path d="M234 24H346" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` +
+    `<rect x="70" y="34" width="62" height="44" fill="#fff" ${OL}/><path d="M76 72l16 -22 12 14 8 -8 14 16z" fill="#5EC8C0"/><circle cx="118" cy="46" r="5" fill="#FFC83D"/>` +
+    `<rect x="18" y="98" width="164" height="70" rx="12" fill="#8B5CF6" ${OL}/><rect x="10" y="140" width="180" height="44" rx="6" fill="#fff" ${OL}/><rect x="10" y="156" width="180" height="28" rx="4" fill="#FFB3D1" ${OL}/><ellipse cx="58" cy="140" rx="30" ry="10" fill="#F4F1FF" ${OL}/><ellipse cx="132" cy="140" rx="30" ry="10" fill="#F4F1FF" ${OL}/>` +
+    `<rect x="196" y="142" width="36" height="40" rx="3" fill="#C98F5E" ${OL}/><path d="M214 142v-22" stroke="${INK}" stroke-width="2"/><circle cx="214" cy="108" r="22" fill="#FFF3A8" opacity="${n ? 0.5 : 0.25}"/><path d="M202 120l4 -16h16l4 16z" fill="#FFD23D" ${OL}/>` +
+    floorMk('#B9A6D9', '#A894CB') + dim(n),
+  cuarto: (n) => `<rect y="-180" width="360" height="420" fill="#FFE3EE"/>` + bulbs('rm', -120, 12, 11, 0, 360) + bulbs('rm', 14, 8, 11, 0, 360) +
+    `<g transform="translate(200 -50) rotate(-6)"><rect x="-34" y="-24" width="68" height="48" rx="4" fill="#fff" ${OL}/><text x="0" y="6" font-size="15" text-anchor="middle" fill="#E0338A" ${HAND}>POP ★</text></g>` +
+    `<g transform="translate(66 76) rotate(-5)"><rect x="-26" y="-34" width="52" height="68" fill="#8B5CF6" ${OL}/><path d="M0 -20l6 12 13 2 -10 9 3 13 -12 -7 -12 7 3 -13 -10 -9 13 -2z" fill="#FFD23D" ${OLT}/></g>` +
+    `<g transform="translate(140 64) rotate(4)"><rect x="-20" y="-24" width="40" height="48" fill="#5EC8F2" ${OL}/><path d="M-4 10V-12l12 -3V6" stroke="${INK}" stroke-width="2.6" fill="none"/><circle cx="-7" cy="10" r="4" fill="${INK}"/><circle cx="5" cy="7" r="4" fill="${INK}"/></g>` +
+    win(270, 34, 64, 56, skyOf(n), moonSun(290, 52, n)) +
+    `<rect x="12" y="122" width="96" height="8" rx="2" fill="#C98F5E" ${OL}/><rect x="22" y="104" width="12" height="18" fill="#FF8C6B" ${OLT}/><rect x="36" y="100" width="10" height="22" fill="#5EC8C0" ${OLT}/><rect x="48" y="106" width="12" height="16" fill="#FFC83D" ${OLT}/>` + unicornMk(86, 106, 0.9) +
+    `<rect x="214" y="112" width="140" height="22" rx="8" fill="#F6B8C8" ${OL}/><rect x="206" y="132" width="154" height="44" rx="8" fill="#B48CF2" ${OL}/><path d="M232 130c-6 -10 6 -14 8 -6c2 -8 14 -4 8 6l-8 8z" fill="#FF4F9A" ${OLT}/><path d="M206 150H360" stroke="#9A6BF0" stroke-width="2"/>` +
+    floorMk('#E2B48A', '#D3A174') + `<ellipse cx="180" cy="210" rx="110" ry="14" fill="#FF8CC6" opacity=".55"/>` + dim(n),
+  sala: (n) => `<rect y="-180" width="360" height="420" fill="#FFF1D6"/><path d="M180 -180v70" stroke="${INK}" stroke-width="1.4"/><path d="M160 -96q20 -24 40 0z" fill="#FF8CC6" ${OL}/><circle cx="180" cy="-80" r="${n ? 46 : 30}" fill="#FFF3A8" opacity="${n ? 0.45 : 0.3}"/>` + win(140, 26, 80, 56, skyOf(n), moonSun(160, 44, n)) +
+    `<rect x="44" y="38" width="44" height="34" fill="#fff" ${OL}/><path d="M50 66l12 -16 8 10 6 -6 8 12z" fill="#FF8CC6"/><rect x="270" y="34" width="40" height="48" fill="#fff" ${OL}/><circle cx="290" cy="56" r="11" fill="#FFD23D"/>` +
+    `<path d="M42 180V96M30 96h24l-4 -20h-16z" stroke="${INK}" stroke-width="2.6" fill="#FFC83D" stroke-linejoin="round"/><circle cx="42" cy="88" r="26" fill="#FFF3A8" opacity="${n ? 0.5 : 0.22}"/>` +
+    `<rect x="78" y="104" width="204" height="52" rx="16" fill="#5EC8C0" ${OL}/><rect x="70" y="140" width="220" height="38" rx="10" fill="#4FB3AB" ${OL}/><rect x="62" y="126" width="28" height="54" rx="12" fill="#5EC8C0" ${OL}/><rect x="270" y="126" width="28" height="54" rx="12" fill="#5EC8C0" ${OL}/>` +
+    `<rect x="100" y="114" width="34" height="28" rx="8" fill="#FF8CC6" ${OLT} transform="rotate(-8 117 128)"/><rect x="226" y="114" width="34" height="28" rx="8" fill="#FFD23D" ${OLT} transform="rotate(8 243 128)"/>` +
+    `<path d="M318 180l-6 -26h28l-6 26z" fill="#E86F4A" ${OL}/><path d="M326 154q-14 -20 -6 -40M326 154q2 -24 14 -36M326 154q14 -14 22 -18" stroke="#3E9E5E" stroke-width="5" fill="none" stroke-linecap="round"/>` +
+    floorMk('#D9B48A', '#C9A274') + `<ellipse cx="180" cy="212" rx="120" ry="15" fill="#B48CF2" opacity=".5"/>` + dim(n),
+  restaurante: (n) => `<rect y="-180" width="360" height="420" fill="#FFE0B8"/>` + papelPicado(-150, 9, 0, 360, 10) +
+    `<rect x="120" y="-80" width="120" height="74" rx="4" fill="#2F3B37" stroke="#A06E40" stroke-width="6"/><path d="M136 -60h46M136 -44h62M136 -28h40" stroke="#F4F2EE" stroke-width="3" stroke-linecap="round" opacity=".8"/><circle cx="216" cy="-52" r="8" fill="#FFC83D"/><path d="M206 -28h22" stroke="#FF8CC6" stroke-width="3" stroke-linecap="round"/>` +
+    [70, 290].map((x) => `<path d="M${x} -180v120" stroke="${INK}" stroke-width="1.2"/><path d="M${x - 16} -44q16 -26 32 0z" fill="#E86F4A" ${OL}/><circle cx="${x}" cy="-30" r="${n ? 40 : 26}" fill="#FFE9A8" opacity="${n ? 0.4 : 0.3}"/>`).join('') +
+    win(14, 30, 70, 70, skyOf(n), moonSun(34, 50, n)) + `<rect x="0" y="94" width="360" height="12" fill="#C98F5E" ${OL}/>` +
+    `<path d="M108 182V90q0 -12 12 -12h120q12 0 12 12v92z" fill="#E23B4B" ${OL}/><path d="M150 82v100M210 82v100" stroke="#B82A3A" stroke-width="2"/>` +
+    `<rect x="262" y="128" width="86" height="12" rx="3" fill="#fff" ${OL}/><path d="M266 140l8 20h70l8 -20" fill="#5EC8F2" ${OLT}/><path d="M280 160v22M334 160v22" stroke="${INK}" stroke-width="3"/><path d="M286 128q8 -12 18 0z" fill="#FFC83D" ${OLT}/><circle cx="326" cy="124" r="5" fill="#5CC27A" ${OLT}/>` +
+    `<rect x="12" y="128" width="86" height="12" rx="3" fill="#fff" ${OL}/><path d="M16 140l8 20h70l8 -20" fill="#FF8CC6" ${OLT}/><path d="M30 160v22M84 160v22" stroke="${INK}" stroke-width="3"/>` +
+    floorMk('#C98F5E', '#B07A4C') + dim(n),
+  super: (n) => `<rect y="-180" width="360" height="420" fill="#EAF6F0"/>` +
+    [-150, -100].map((y) => `<rect x="40" y="${y}" width="110" height="10" rx="5" fill="#FFFDE8" ${OLT}/><rect x="210" y="${y}" width="110" height="10" rx="5" fill="#FFFDE8" ${OLT}/>`).join('') +
+    `<path d="M180 -180v40" stroke="${INK}" stroke-width="1.2"/><path d="M164 -140h32l-6 22h-20z" fill="#4A4458" ${OL}/>` + note(204, -122, '#E0338A', -14) + note(150, -108, '#8B5CF6', 10) + note(214, -92, '#3C8CF2', 6) +
+    [0, 250].map((x0) => {
+      const cl = ['#FF6B4A', '#FFC83D', '#5EC8F2', '#8B5CF6', '#5CC27A', '#FF8CC6'];
+      return `<rect x="${x0}" y="-20" width="110" height="200" fill="#D9DEE8" ${OL}/>` + [12, 64, 116].map((y, r) => `<path d="M${x0} ${y + 36}h110" stroke="#9AA6BA" stroke-width="4"/>` +
+        [0, 1, 2, 3, 4].map((i) => `<rect x="${x0 + 6 + i * 21}" y="${y + (i % 2 ? 12 : 6)}" width="16" height="${i % 2 ? 24 : 30}" rx="2" fill="${cl[(i + r * 2) % 6]}" ${OLT}/>`).join('')).join('');
+    }).join('') +
+    `<path d="M124 182l8 -40h96l8 40z" fill="#A06E40" ${OL}/>` + [[146, 138, '#FF8A3D'], [162, 134, '#FF8A3D'], [178, 138, '#E23B4B'], [194, 134, '#E23B4B'], [210, 138, '#FFD23D'], [154, 126, '#FF8A3D'], [186, 126, '#E23B4B'], [202, 126, '#FFD23D']].map(([x, y, cl]) => `<circle cx="${x}" cy="${y}" r="8" fill="${cl}" ${OLT}/>`).join('') +
+    floorMk('#F4F1EA', '#E0DCD2') + dim(n),
+  estacionamiento: (n) => `<rect y="-180" width="360" height="420" fill="${skyOf(n)}"/>` + (n ? stars(30, 60) : `<g fill="#fff"><ellipse cx="80" cy="-110" rx="30" ry="10"/><ellipse cx="270" cy="-70" rx="24" ry="8"/></g>`) + moonSun(300, -130, n) +
+    `<path d="M0 120L40 90 70 104 110 40 140 70 170 30 200 70 240 56 290 100 330 80 360 96V140H0z" fill="${n ? '#3B3570' : '#8FA6C8'}"/><rect y="118" width="360" height="62" fill="${n ? '#4A4458' : '#B9B2A8'}"/>` +
+    `<g transform="translate(150 98)"><path d="M0 70V20q0 -16 16 -16h110q14 0 20 14l18 30q6 10 6 22z" fill="#FFC83D" ${OL}/><path d="M18 14h40v28h-40zM68 14h40v28h-40zM118 14h12l18 28h-30z" fill="#BDE7FF" ${OLT}/><path d="M0 52h170" stroke="#E0A31C" stroke-width="3"/>` +
+    `<circle cx="36" cy="72" r="15" fill="#2F2A3E" ${OL}/><circle cx="36" cy="72" r="6" fill="#9AA6BA"/><ellipse cx="138" cy="80" rx="17" ry="8" fill="#2F2A3E" ${OL}/><circle cx="138" cy="78" r="5" fill="#9AA6BA"/></g>` +
+    `<rect x="40" y="96" width="8" height="84" fill="#9AA6BA" ${OLT}/><path d="M30 96h40" stroke="#4A4458" stroke-width="5" stroke-linecap="round"/><circle cx="62" cy="104" r="${n ? 34 : 0}" fill="#FFF3A8" opacity=".3"/>` +
+    `<rect y="180" width="360" height="60" fill="#5E5A66"/><path d="M0 180H360" stroke="${INK}" stroke-width="1.2" opacity=".3"/><path d="M60 186l-14 54M180 186v54M300 186l14 54" stroke="#F4F1EA" stroke-width="4"/>` + dim(n),
+};
+export const ROOM_IDS = Object.keys(ROOMS);
+// kind: cocina · coche · hotel · cuarto · sala. Devuelve null si no hay cuarto dibujado.
+export function roomSvg(kind, { night = false } = {}) {
+  const f = ROOMS[kind];
+  if (!f) return null;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -180 360 420" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">${STYLE}${minify(f(!!night))}</svg>`;
+}

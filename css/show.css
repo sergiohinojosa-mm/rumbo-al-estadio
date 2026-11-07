@@ -38,24 +38,81 @@
 .sh-set .chips .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 48px; }
 .sh-right .btn.ghost { min-height: 48px; }
 
-/* Live: encore and free solo */
-.sh-encore { gap: 10px; }
-.sh-encore h3 { font-size: 26px; color: var(--pop); }
-.sh-solo { gap: 10px; }
-.sh-solo-bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; }
-.sh-solo-bar > i { display: block; height: 100%; width: 0; background: var(--pop); }
+/* Live: encore and free solo (five glossy neon pads; a tap squashes the pad and flashes its glow). */
+/* Encore and solo share the rhythm stage's night frame (same dark gradient, two spotlight pools from the top
+   corners, the thin light rim), so lanes → encore → solo read as one concert. All static; only the pop-in moves. */
+.sh-encore, .sh-solo { gap: 10px; position: relative; overflow: hidden; color: #fff; border: 0;
+  background:
+    radial-gradient(60% 45% at 0% 0%, rgba(255, 156, 204, 0.32), transparent 70%),
+    radial-gradient(60% 45% at 100% 0%, rgba(169, 192, 255, 0.28), transparent 70%),
+    radial-gradient(90% 50% at 50% 100%, rgba(255, 95, 168, 0.22), transparent 70%),
+    linear-gradient(180deg, #24133d, #170d2a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 10px 28px rgba(27, 18, 41, 0.35); }
+.sh-encore h3 { font-size: 30px; color: #fff; text-shadow: 0 3px 0 #a3134f, 0 0 18px rgba(255, 95, 168, 0.75); }
+.sh-encore p { color: #f1eafb; }
+.sh-encore .sh-record { color: #241a33; background: linear-gradient(180deg, #ffe08a, #ffc23d); border-radius: 999px; padding: 3px 14px; justify-self: center;
+  box-shadow: 0 2px 0 #b9811a, 0 0 14px rgba(255, 207, 92, 0.6); }
+.sh-encore .btn:not(.ghost) { background: linear-gradient(180deg, #ff5fa8, #c2185b); color: #fff; box-shadow: 0 4px 0 #7d0f3b, 0 0 18px rgba(255, 95, 168, 0.45); }
+.sh-encore .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.04); }
+.sh-encore .btn:focus-visible, .sh-solo :focus-visible { outline: 3px solid #ffcf5c; outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-encore { animation: sh-pop-in .5s cubic-bezier(.2, .8, .3, 1.3); }
+  .sh-encore h3 { animation: sh-wiggle 1.2s ease-in-out .5s 2; }
+}
+@keyframes sh-pop-in { from { transform: scale(.85); opacity: 0; } }
+@keyframes sh-wiggle { 25% { transform: rotate(-3deg) scale(1.05); } 75% { transform: rotate(3deg) scale(1.05); } }
+
+.sh-solo h3 { font-size: 26px; color: #fff; text-shadow: 0 3px 0 #a3134f, 0 0 16px rgba(255, 95, 168, 0.7); }
+.sh-solo .muted { color: #e6dcf5; }
+.sh-solo-bar { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+.sh-solo-bar > i { display: block; height: 100%; width: 100%; transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, #ff5fa8, #ffcf5c); }
 .sh-pads { display: grid; grid-template-columns: repeat(5, minmax(48px, 1fr)); gap: 6px; }
 @media (max-width: 340px) { .sh-pads { gap: 4px; } }
 .sh-pad {
-  min-height: 120px; border-radius: 16px; border: 2px solid var(--line); font-size: 26px; cursor: pointer;
-  background: color-mix(in srgb, var(--pc) 22%, var(--paper)); color: var(--ink); touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  position: relative; overflow: hidden; min-height: 132px; border-radius: 16px; font-size: 28px; cursor: pointer; padding: 0;
+  border: 2px solid color-mix(in srgb, var(--pc) 90%, #fff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 70%, #fff) 0%, var(--pc) 45%, color-mix(in srgb, var(--pc) 62%, #000) 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.4), inset 0 -4px 0 rgba(0, 0, 0, 0.2), 0 0 16px color-mix(in srgb, var(--pc) 45%, transparent);
+  color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3); touch-action: manipulation; user-select: none; -webkit-user-select: none;
 }
-.sh-pad.p0 { --pc: var(--pop); } .sh-pad.p1 { --pc: var(--sky); } .sh-pad.p2 { --pc: var(--sun); } .sh-pad.p3 { --pc: var(--good); } .sh-pad.p4 { --pc: var(--calm); }
+.sh-pad::after { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 55%, #fff, transparent 70%); }
+.sh-pad.p0 { --pc: #ff5fa8; } .sh-pad.p1 { --pc: #86a9ff; } .sh-pad.p2 { --pc: #ffcf5c; color: #241a33; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+.sh-pad.p3 { --pc: #4fd18f; } .sh-pad.p4 { --pc: #b07cff; }
+.sh-pad:focus-visible { outline: 3px solid #ffcf5c; outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) {
-  .sh-pad.hit { animation: sh-hit .25s ease-out; }
+  .sh-pad.hit { animation: sh-hit .28s cubic-bezier(.2, .8, .3, 1.4); }
+  .sh-pad.hit::after { animation: sh-flash .35s ease-out; }
   .sh-coin { transition: transform .12s ease-out; }
 }
-@keyframes sh-hit { from { transform: scale(.92); background: var(--pc); } }
+@keyframes sh-hit { from { transform: scale(.88) translateY(3px); } }
+@keyframes sh-flash { from { opacity: .85; } }
+
+/* Live scene: two moving light beams over the venue drawing; at the chorus they brighten and little notes float up
+   from the crowd. pointer-events: none, transform/opacity only. */
+.sh-scene-wrap { position: relative; border-radius: 18px; overflow: hidden; }
+.sh-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.sh-fx > i { position: absolute; top: -8%; width: 46%; height: 95%; transform-origin: 50% 0; opacity: .18;
+  clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); }
+.sh-fx > i:nth-child(1) { left: 6%; background: linear-gradient(180deg, #ff9ccc, transparent 90%); transform: rotate(-12deg); }
+.sh-fx > i:nth-child(2) { right: 6%; background: linear-gradient(180deg, #a9c0ff, transparent 90%); transform: rotate(12deg); }
+.sh-fx > b { position: absolute; bottom: 10%; font-size: 24px; line-height: 1; opacity: 0; color: #fff; font-weight: 800;
+  text-shadow: 0 0 10px rgba(255, 95, 168, .95), 0 1px 2px rgba(0, 0, 0, .6); }
+.sh-fx > b:nth-of-type(1) { left: 12%; } .sh-fx > b:nth-of-type(2) { left: 30%; color: #ffcf5c; } .sh-fx > b:nth-of-type(3) { left: 48%; }
+.sh-fx > b:nth-of-type(4) { left: 64%; color: #86a9ff; } .sh-fx > b:nth-of-type(5) { left: 80%; } .sh-fx > b:nth-of-type(6) { left: 90%; color: #ffcf5c; }
+.sh-lit .sh-fx > i { opacity: .34; }
+@media (prefers-reduced-motion: no-preference) {
+  .sh-fx > i:nth-child(1) { animation: sh-sway-l 4.8s ease-in-out infinite alternate; }
+  .sh-fx > i:nth-child(2) { animation: sh-sway-r 5.6s ease-in-out infinite alternate; }
+  .sh-lit .sh-fx > b { animation: sh-float 2.4s ease-out infinite; }
+  .sh-lit .sh-fx > b:nth-of-type(2) { animation-delay: .4s; } .sh-lit .sh-fx > b:nth-of-type(3) { animation-delay: 1.1s; }
+  .sh-lit .sh-fx > b:nth-of-type(4) { animation-delay: .7s; } .sh-lit .sh-fx > b:nth-of-type(5) { animation-delay: 1.6s; }
+  .sh-lit .sh-fx > b:nth-of-type(6) { animation-delay: 2s; }
+}
+@keyframes sh-sway-l { from { transform: rotate(-24deg); } to { transform: rotate(10deg); } }
+@keyframes sh-sway-r { from { transform: rotate(24deg); } to { transform: rotate(-10deg); } }
+@keyframes sh-float { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120px) scale(1.1) rotate(12deg); opacity: 0; } }
 
 /* Close: photo, numbers, chains */
 .sh-photo { margin: 0; background: #fffdf6; border-radius: 6px; padding: 10px 10px 8px; box-shadow: var(--shadow); transform: rotate(-1.2deg); display: grid; gap: 6px; color: #241a33; }
@@ -101,22 +158,66 @@
 .rg-songs .chip span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rg-slow[hidden] { display: none; }
 .rg-pad { gap: 0; align-content: center; }
-.rg-pad .rg-shape { font-style: normal; font-size: 22px; line-height: 1; }
-.rg-pad b { font-size: 12px; line-height: 1; }
-.rg-note { display: grid; place-items: center; font-size: 15px; line-height: 1; color: rgba(27, 18, 41, 0.72); }
+.rg-pad .rg-shape { font-style: normal; font-size: 24px; line-height: 1; position: relative; text-shadow: 0 0 10px var(--lane), 0 2px 0 rgba(0, 0, 0, 0.35); }
+.rg-pad b { font-size: 12px; line-height: 1; position: relative; }
+.rg-note { display: grid; place-items: center; font-size: 15px; line-height: 1; color: rgba(27, 18, 41, 0.78); }
 .rg-intro { position: absolute; left: 8px; right: 8px; top: 28%; z-index: 1; text-align: center; font-weight: 800; font-size: 18px; color: #fff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); pointer-events: none; }
 .rg-intro[hidden], .rg-cue-txt[hidden] { display: none; }
 .rg-cue-txt { position: absolute; left: 0; right: 0; bottom: 124px; text-align: center; font-weight: 800; font-size: 17px; color: var(--sun);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); pointer-events: none; white-space: nowrap; }
-.rg-pad.rg-cue { box-shadow: 0 0 16px 4px var(--lane); background: color-mix(in srgb, var(--lane) 45%, transparent); }
+.rg-pad.rg-cue { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 0 18px 4px var(--lane); }
+.rg-pad.rg-cue .rg-pad-glow { opacity: 0.6; }
 @media (prefers-reduced-motion: no-preference) {
-  .rg:not(.rg-calm) .rg-pad.rg-cue { animation: rg-cue 0.45s ease-in-out infinite alternate; }
+  .rg:not(.rg-calm) .rg-pad.rg-cue .rg-pad-glow { animation: rg-cue 0.45s ease-in-out infinite alternate; }
 }
-@keyframes rg-cue { from { box-shadow: 0 0 4px 0 var(--lane); } to { box-shadow: 0 0 20px 6px var(--lane); } }
-.rg-record { font-size: 18px; color: var(--sun); }
+@keyframes rg-cue { from { opacity: 0.15; } to { opacity: 0.8; } }
+.rg-record { font-size: 16px; font-weight: 800 !important; color: #241a33; background: linear-gradient(180deg, #ffe08a, #ffc23d); border-radius: 999px; padding: 4px 14px;
+  box-shadow: 0 2px 0 #b9811a, 0 0 14px rgba(255, 207, 92, 0.6); }
 .sh-record { font-weight: 800; color: var(--pop); }
 .rg-session { gap: 10px; }
 .rg-after { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .rg-after .btn { margin: 0; min-width: 0; padding-inline: 8px; }
 .rg-after .btn[hidden] { display: none; }
+
+/* Beat glow and hit pops over the venue (live.js onFx). Daytime venues: no beams. */
+.sh-fx > .sh-glow { position: absolute; inset: 0; opacity: 0; font-style: normal;
+  background: radial-gradient(70% 55% at 50% 38%, rgba(255, 207, 92, .45), rgba(255, 95, 168, .18) 55%, transparent 75%); }
+.sh-fx > s { position: absolute; bottom: 12%; left: 50%; opacity: 0; text-decoration: none; font-size: 22px; line-height: 1; font-weight: 800;
+  color: #ff5fa8; text-shadow: 0 0 8px rgba(255, 255, 255, .9), 0 1px 2px rgba(0, 0, 0, .5); }
+.sh-fx > s:nth-of-type(1) { left: 22%; } .sh-fx > s:nth-of-type(2) { left: 70%; color: #86a9ff; }
+.sh-fx > s:nth-of-type(3) { left: 40%; color: #ffcf5c; } .sh-fx > s:nth-of-type(4) { left: 84%; color: #fff; }
+.sh-fx.sh-day > i { display: none; }
+.sh-fx.sh-day > .sh-glow { background: radial-gradient(70% 55% at 50% 40%, rgba(255, 255, 255, .45), rgba(255, 207, 92, .2) 55%, transparent 75%); }
+
+/* Phone, while she plays the show: everything on one screen (venue strip, title, chorus box, lanes, pads, bar).
+   The page becomes a column of exactly the screen height; the venue drawing shrinks to a strip (whole drawing,
+   centered) and the lanes take what is left. After the song (encore, solo) the normal scrolling page comes back. */
+@media (max-width: 899px) {
+  .sh-live-page.sh-playing { height: 100dvh; min-height: 0; gap: 0; grid-template-rows: minmax(0, 1fr);
+    padding-top: max(8px, env(safe-area-inset-top, 0px)); padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+  .sh-playing .sh-cols { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .sh-playing .sh-left { flex: none; }
+  .sh-playing .sh-stage { gap: 4px; }
+  .sh-playing .sh-stage-head { font-size: 14px; }
+  .sh-playing .sh-scene-wrap { height: clamp(78px, calc(100dvh - 530px), 200px); aspect-ratio: 360 / 220; max-width: 100%; margin-inline: auto; border-radius: 14px; }
+  .sh-playing .sh-scene-wrap .sh-scene { height: 100%; border-radius: 14px; }
+  .sh-playing .sh-scene-wrap svg { width: 100% !important; height: 100% !important; }
+  .sh-playing .sh-right { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .sh-playing .rg { flex: 1; min-height: 0; gap: 6px; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .sh-playing .rg-title { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sh-playing .rg-chorus { padding: 6px 10px; gap: 0; }
+  .sh-playing .rg-chorus b { font-size: 15px; }
+  .sh-playing .rg-chorus span { font-size: 12px; }
+  .sh-playing .rg-wrap { min-height: 0; }
+  .sh-playing .rg-stage { height: 100%; min-height: 220px; }
+  .sh-playing .rg-hud { gap: 2px; }
+  .sh-playing .rg-hud .rg-row { min-height: 24px; }
+}
+@media (min-width: 600px) and (max-width: 899px) {   /* tablets: more room for the venue, the lanes stay roomy */
+  .sh-playing .sh-scene-wrap { height: clamp(78px, calc(100dvh - 640px), 320px); }
+}
+
+/* Rehearsal (rehearsalScreen): the lanes and the Otra vez / Seguir buttons fit one screen, also on an iPhone SE. */
+.rg-session .rg-stage { height: clamp(250px, calc(100dvh - 290px), 520px); }
+.sh-fx.sh-day > b { color: #d81b7a; text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
