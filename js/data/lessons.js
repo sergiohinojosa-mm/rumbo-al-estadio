@@ -1,7 +1,7 @@
 // Las 38 lecciones del Libro (HISTORIA_TMP §3.0, tabla definitiva), del Prólogo al Final.
 // Las enseñan cinco personas:
 //   papa     ▶ solo frases de la lista aprobada, palabra por palabra. audio: true = ya hay grabación en juego/audio/<id>.m4a.
-//            Las 3 nuevas (un_no, cumple, cuida_fans) van con audio: false hasta que Papá las grabe (se muestran con su firma).
+//            Las 3 nuevas (un_no, cumple, cuida_fans) se grabaron el 7 de noviembre de 2026: ya son 20 con audio.
 //   mama, alma, hermana, juju   📖 globo de texto (frases escritas para el juego).
 // Campos: id, by, chapter (0 = Prólogo … 7 = Final), icon, phrase (como sale en el Libro), meaning (≤ 25 palabras),
 //   tip (💡 La próxima vez…), when (el momento en que se oye), audio. Opcional: said (cómo lo dice el personaje en la escena,
@@ -43,7 +43,7 @@ const RAW = [
     meaning: 'Con el cuerpo cansado se aprende poquito y se toca peor. Una tarde de descanso hace que el siguiente ensayo rinda más.',
     tip: '💡 La próxima vez, después de dos tardes de trabajo, mete una de descanso.',
     when: 'Después de tres tardes de trabajo sin descanso, cuando Mamá entra con agua de jamaica (C1-06).' },
-  { id: 'un_no', by: 'papa', chapter: 1, icon: '🚪', audio: false,
+  { id: 'un_no', by: 'papa', chapter: 1, icon: '🚪', audio: true,
     phrase: 'Un no hoy no es un no para siempre',
     meaning: 'Un "no" casi siempre quiere decir "todavía no". Si preguntas qué faltó y lo traes, la puerta se puede abrir.',
     tip: '💡 La próxima vez que te digan que no, pregunta qué te faltó, porque así sabes qué llevar la siguiente vez.',
@@ -75,7 +75,7 @@ const RAW = [
     meaning: 'Tu equipo te cuida en cada show. Cuando alguien se burla de uno de ellos, una buena líder da la cara.',
     tip: '💡 La próxima vez que alguien trate mal a tu equipo, di con calma que vienen completos.',
     when: 'Cuando quien contrató el show se burla del teclado de {teclas} (C2-05).' },
-  { id: 'cumple', by: 'papa', chapter: 2, icon: '✋', audio: false,
+  { id: 'cumple', by: 'papa', chapter: 2, icon: '✋', audio: true,
     phrase: 'Cumple lo que prometes',
     meaning: 'Cuando cumples tu palabra, la gente confía en ti y te vuelve a llamar. Romperla cuesta más que lo que ganas.',
     tip: '💡 La próxima vez que llegue una oferta mejor, revisa primero a quién ya le dijiste que sí.',
@@ -129,7 +129,7 @@ const RAW = [
     meaning: 'Si siempre haces lo mismo, la gente se aburre. Probar algo nuevo te mantiene sonando fresca.',
     tip: '💡 La próxima vez que algo deje de funcionar, prueba una idea nueva en chiquito.',
     when: 'Cuando Dafne propone grabar juntas o hacer un video con los fans (cap. 4, momento 4).' },
-  { id: 'cuida_fans', by: 'papa', chapter: 4, icon: '💛', audio: false,
+  { id: 'cuida_fans', by: 'papa', chapter: 4, icon: '💛', audio: true,
     phrase: 'Cuida a tus fans y ellos te cuidarán',
     meaning: 'Cuando escuchas a tus fans y les das tiempo, ellos comparten tu música con todos sus conocidos.',
     tip: '💡 La próxima vez que tengas un ratito después del show, quédate a platicar y pregúntales qué quieren oír.',
@@ -217,7 +217,7 @@ const RAW = [
     when: 'De regreso en la cochera con el gramófono, tocando para 3 sillas (Final, hito).' },
 ];
 
-// Todas llevan `audio` (booleano): false salvo las 17 frases de Papá con grabación.
+// Todas llevan `audio` (booleano): false salvo las 20 frases de Papá con grabación.
 export const LESSONS = RAW.map((l) => ({ audio: false, ...l }));
 
 export const LESSON_BY_ID = Object.fromEntries(LESSONS.map((l) => [l.id, l]));

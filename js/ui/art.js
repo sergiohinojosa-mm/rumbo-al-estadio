@@ -456,9 +456,14 @@ function sticks(H, ang) {
 
 const CAST = {
   me: (o) => ({ ...lookSpec(o.look || MARIEL_LOOK), inst: 'guitar' }),
+  // Nina (la amiga de Mariel): pelo largo lacio castaño, ojos cafés, sonrisa enorme, gorra verde (sin logo),
+  // playera rosita con corazón, jeans y sus pulseras de la amistad.
   nina: () => ({
-    name: 'Nina', skin: '#D9A27A', hair: '#3A2620', style: 'chongos', tie: '#FFC83D', eyes: '#5B3A26', lash: true, mouth: 'open',
-    outfit: 'playera', top: '#FFC83D', accent: '#E0338A', print: 'heart', skirt: '#9A6BF0', bracelet: true, palm: true, sole: '#9A6BF0',
+    name: 'Nina', skin: '#EDC3A2', hair: '#6A4029', tip: '#9C6A45', style: 'lacio', eyes: '#5B3A26', lash: true, mouth: 'open',
+    outfit: 'playera', top: '#F9CFDC', accent: '#E0338A', print: 'heart', bottom: '#5B86C7', bracelet: true, wrist: 'tres', palm: true, sole: '#FF6FAE',
+    headFront: `<path d="M-21.5 -5C-23 -23 -11 -30 0 -30C11 -30 23 -23 21.5 -5C14 -9 -14 -9 -21.5 -5Z" fill="#1F7A4D" ${OL}/>` +
+      `<path d="M-23 -5.5Q0 -12.5 23 -5.5Q24.5 -1.4 20.5 -.8Q0 -6.4 -20.5 -.8Q-24.5 -1.4 -23 -5.5Z" fill="#17603C" ${OL}/>` +
+      `<g transform="translate(0 -18.5) scale(1.1)">${PRINT.star('#FFE36E')}</g><circle cx="0" cy="-29.2" r="1.6" fill="#17603C" ${OLT}/>`,
     arms: ({ pose, SL, SR, g }) => {
       if (pose === 'play') return [[[SL[0] - 10, SL[1] - 2], [SL[0] - 15, SL[1] - 19]], [[SR[0] + 9, SR[1] + 12], [56, g.sh - 2]]];
       const mic = [[SR[0] + 7, SR[1] + 15], [55, g.sh + 12]];

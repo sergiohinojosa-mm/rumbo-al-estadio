@@ -114,8 +114,9 @@ let fresh = NEW_FALLBACK;
 try {
   const m = await import('./js/data/lessons.js');
   const list = (m.LESSONS || m.default || []).filter((l) => l.by === 'papa' && l.audio === false);
-  if (list.length) fresh = list;
+  fresh = list;
 } catch { /* catálogo todavía no escrito */ }
+if (!fresh.length) document.querySelector('#listNew').previousElementSibling.textContent = '🆕 Frases nuevas: ¡ya están todas grabadas! ✅';
 
 const F = [...fresh.map((x) => ({ ...x, redo: false })), ...REDO];
 const KEY = 'grabadora.rumbo.hechas';
