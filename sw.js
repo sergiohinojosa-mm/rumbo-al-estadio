@@ -21,7 +21,7 @@ const VOICE = ['aprende_ano', 'cuida_fans', 'cumple', 'decide_info', 'defiende',
   'integridad', 'largo_plazo', 'mentora', 'mitad_camino', 'negocia', 'practica', 'prueba_chico', 'riesgo_premio', 'un_no'].map((x) => `./audio/${x}.m4a`);
 const SHELL = [
   './', './index.html', './manifest.json',
-  ...['styles', 'music', 'art', 'screens', 'show', 'export', 'album'].map((x) => `./css/${x}.css`),
+  ...['styles', 'music', 'art', 'screens', 'show', 'export', 'album', 'week'].map((x) => `./css/${x}.css`),
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
   ...JS, ...VOICE,
 ];
