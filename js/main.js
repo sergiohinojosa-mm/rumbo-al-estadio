@@ -50,6 +50,9 @@ function firstTouch() {
 }
 document.addEventListener('pointerdown', firstTouch, true);
 document.addEventListener('keydown', firstTouch, true);
+// iOS can suspend or "interrupt" the music later (a call, Siri, another app): any touch wakes it again.
+document.addEventListener('pointerdown', () => { try { if (synth && !synth.isRunning?.()) synth.unlock?.(); } catch { /* sin audio */ } }, true);
+document.addEventListener('visibilitychange', () => { try { if (!document.hidden && synth?.isRunning && !synth.isRunning()) synth.unlock?.(); } catch { /* sin audio */ } });
 
 async function stopMusic() {
   const song = await need('song', './music/song.js');

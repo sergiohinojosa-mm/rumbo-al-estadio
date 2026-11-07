@@ -484,7 +484,7 @@ export function playSong(song, opts = {}) {
 
   const tick = () => {
     if (done) return;
-    const horizon = c.currentTime + 0.15;
+    const horizon = c.currentTime + 0.3; // room for a busy frame (the rhythm game draws while the music plays)
     while (!done && startTime + n * step < horizon) {
       scheduleStep(n, startTime + n * step);
       n++;

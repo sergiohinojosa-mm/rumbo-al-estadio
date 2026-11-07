@@ -166,7 +166,7 @@ export function rhythmGame({
     root.dataset.state = 'play';
     overlay.hidden = true;
     intro.hidden = false;   // the intro bars have no notes: tell her they're coming
-    const ok = await Promise.race([unlock(), new Promise((r) => setTimeout(() => r(false), 500))]);
+    const ok = await Promise.race([unlock(), new Promise((r) => setTimeout(() => r(false), 1500))]); // iOS can take a moment to wake
     if (state !== 'play') return;
     measure();
     const c = getContext();

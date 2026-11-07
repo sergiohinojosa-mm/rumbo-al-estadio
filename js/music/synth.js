@@ -15,8 +15,16 @@ const ksCache = new Map();
 
 export const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
+// iPhone: WebAudio counts as "ambient" sound, so the ring/silent switch mutes the music while Papá's
+// voice (an <audio> element) still plays. Asking for a "playback" session makes the music behave like
+// the voice: it plays with the switch on silent (iOS 17+; older systems just ignore it).
+export function playbackSession() {
+  try { if (typeof navigator !== 'undefined' && navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch { /* not supported */ }
+}
+
 export function getContext() {
   if (ctx) return ctx;
+  playbackSession();
   const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
   if (!AC) return null;
   try { ctx = new AC({ latencyHint: 'interactive' }); } catch { try { ctx = new AC(); } catch { return null; } }
@@ -107,7 +115,9 @@ function impulse(seconds, decay) {
 }
 
 // First touch on iOS/Safari: create + resume inside the gesture and play one silent sample.
+// Also called on later touches: iOS leaves the context "interrupted" after a call, Siri or switching apps.
 export function unlock() {
+  playbackSession();
   const c = getContext();
   if (!c) return Promise.resolve(false);
   try {
